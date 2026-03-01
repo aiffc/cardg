@@ -39,6 +39,7 @@ class Player {
     int32_t health() const { return m_health; }
     void health(int32_t v) { m_health = v; }
     void addHealth(int32_t v) { m_health += v; }
+    void hurt(int32_t v) { m_health -= v; }
 
     int32_t armor() const { return m_armor; }
     void armor(int32_t v) { m_armor = v; }
