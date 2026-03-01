@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -14,6 +15,10 @@ class Player {
   private:
     CardHeap m_heap;
     CardHand m_hand;
+    int32_t m_health;
+    int32_t m_armor;
+    int32_t m_magic_armor;
+    // TODO buff
 
   public:
     Player();
@@ -27,6 +32,21 @@ class Player {
 
     void showHand() const;
     void showHeap() const;
+
+    /* return true if player is dead */
+    bool isDead() const { return m_health <= 0; }
+
+    int32_t health() const { return m_health; }
+    void health(int32_t v) { m_health = v; }
+    void addHealth(int32_t v) { m_health += v; }
+
+    int32_t armor() const { return m_armor; }
+    void armor(int32_t v) { m_armor = v; }
+    void addArmor(int32_t v) { m_armor += v; }
+
+    int32_t magicArmor() const { return m_magic_armor; }
+    void magicArmor(int32_t v) { m_magic_armor = v; }
+    void addMagicArmor(int32_t v) { m_magic_armor += v; }
 
     Player(Player &) = delete;
     Player(Player &&) = delete;
