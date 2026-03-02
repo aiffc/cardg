@@ -1,129 +1,142 @@
 #pragma once
 
+#include "spdlog/spdlog.h"
+#include <functional>
 #include <string>
 #include <string_view>
+
 namespace cg {
 
 class Player;
 
 enum class CardType {
     Common,
-    Attack,
-    Magic,
-    Defense,
-    MagicDefense,
-    Health,
-    Buff,
-    Debuff,
+    Warrior,
+    Tank,
+    Mage,
+    Priest,
+    Archer,
+    Assassin,
+    Ranger,
+    Hunter,
+    Alchemy,
+};
+
+enum class CardCastObj {
+    Group,
+    Single,
 };
 
 class Card {
-  private:
-    CardType m_type = CardType::Common;
+  protected:
+    CardType m_type;
+    CardCastObj m_cast_type;
     std::string m_name;
     std::string m_doc{};
+    std::function<void(std::vector<Player *> &cast_obj)> m_effect_group;
+    std::function<void(Player *cast_obj)> m_effect_single;
 
   public:
-    Card(std::string_view v);
+    Card(CardType type, CardCastObj cast_type, std::string_view v);
     virtual ~Card();
 
     const std::string &name() const { return m_name; }
     void name(std::string_view v) { m_name = std::string(v); }
 
-    virtual void cast(Player *obj) = 0;
+    void
+    effect(const std::function<void(std::vector<Player *> &cast_obj)> &effect) {
+        m_effect_group = effect;
+    }
+
+    void effect(const std::function<void(Player *cast_obj)> &effect) {
+        m_effect_single = effect;
+    }
+
+    void cast(std::vector<Player *> &obj) {
+        if (m_effect_group) {
+            m_effect_group(obj);
+        } else {
+            spdlog::warn("group effect function not defined");
+        }
+    }
+
+    void cast(Player *obj) {
+        if (m_effect_single && obj) {
+            m_effect_single(obj);
+        } else {
+            spdlog::warn("effect function not defined or obj is null");
+        }
+    }
 };
 /* ---------------------------------------------------------------------------------------
  */
 class CommonCard : public Card {
   public:
-    CommonCard(std::string_view name);
+    CommonCard(CardCastObj cast_type, std::string_view name);
     ~CommonCard() override;
-
-    void cast(Player *obj) override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class AttackCard : public Card {
-  private:
-    int32_t m_value;
-
+class WarriorCard : public Card {
   public:
-    AttackCard(std::string_view name, int32_t value);
-    ~AttackCard() override;
-
-    void cast(Player *obj) override;
+    WarriorCard(CardCastObj cast_type, std::string_view name);
+    ~WarriorCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class MagicCard : public Card {
-  private:
-    int32_t m_value;
-
+class TankCard : public Card {
   public:
-    MagicCard(std::string_view name, int32_t value);
-    ~MagicCard() override;
-
-    void cast(Player *obj) override;
+    TankCard(CardCastObj cast_type, std::string_view name);
+    ~TankCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class DefenseCard : public Card {
-  private:
-    int32_t m_value;
-
+class PriestCard : public Card {
   public:
-    DefenseCard(std::string_view name, int32_t value);
-    ~DefenseCard() override;
-
-    void cast(Player *obj) override;
+    PriestCard(CardCastObj cast_type, std::string_view name);
+    ~PriestCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class MagicDefenseCard : public Card {
-  private:
-    int32_t m_value;
-
+class MageCard : public Card {
   public:
-    MagicDefenseCard(std::string_view name, int32_t value);
-    ~MagicDefenseCard() override;
-
-    void cast(Player *obj) override;
+    MageCard(CardCastObj cast_type, std::string_view name);
+    ~MageCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class HealthCard : public Card {
-  private:
-    int32_t m_value;
-
+class ArcherCard : public Card {
   public:
-    HealthCard(std::string_view name, int32_t value);
-    ~HealthCard() override;
-
-    void cast(Player *obj) override;
+    ArcherCard(CardCastObj cast_type, std::string_view name);
+    ~ArcherCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class BuffCard : public Card {
-  private:
-    int32_t m_value;
-
+class AssassinCard : public Card {
   public:
-    BuffCard(std::string_view name, int32_t value);
-    ~BuffCard() override;
-
-    void cast(Player *obj) override;
+    AssassinCard(CardCastObj cast_type, std::string_view name);
+    ~AssassinCard() override;
 };
 /* ---------------------------------------------------------------------------------------
  */
-class DebuffCard : public Card {
-  private:
-    int32_t m_value;
-
+class RangerCard : public Card {
   public:
-    DebuffCard(std::string_view name, int32_t value);
-    ~DebuffCard() override;
-
-    void cast(Player *obj) override;
+    RangerCard(CardCastObj cast_type, std::string_view name);
+    ~RangerCard() override;
+};
+/* ---------------------------------------------------------------------------------------
+ */
+class HunterCard : public Card {
+  public:
+    HunterCard(CardCastObj cast_type, std::string_view name);
+    ~HunterCard() override;
+};
+/* ---------------------------------------------------------------------------------------
+ */
+class AlchemyCard : public Card {
+  public:
+    AlchemyCard(CardCastObj cast_type, std::string_view name);
+    ~AlchemyCard() override;
 };
 
 } // namespace cg

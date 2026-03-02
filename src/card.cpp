@@ -4,81 +4,48 @@
 
 namespace cg {
 
-Card::Card(std::string_view v) : m_name(v) {}
+Card::Card(CardType type, CardCastObj cast_type, std::string_view v)
+    : m_type(type), m_cast_type(cast_type), m_name(v) {}
 Card::~Card() = default;
 
-CommonCard::CommonCard(std::string_view name) : Card(name) {}
+CommonCard::CommonCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Warrior, cast_type, name) {}
 CommonCard::~CommonCard() = default;
 
-AttackCard::AttackCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-AttackCard::~AttackCard() = default;
-void AttackCard::cast(Player *obj) {
-    if (obj && !obj->isDead()) {
-        int32_t armor = obj->armor();
-        int32_t hurt = m_value;
-        if (armor > 0) {
-            hurt -= armor;
-            obj->addArmor(-m_value);
-        }
-        if (hurt > 0) {
-            obj->hurt(hurt);
-        }
-    }
-}
+WarriorCard::WarriorCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Warrior, cast_type, name) {}
+WarriorCard::~WarriorCard() = default;
 
-MagicCard::MagicCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-MagicCard::~MagicCard() = default;
-void MagicCard::cast(Player *obj) {
-    if (obj && !obj->isDead()) {
-        int32_t armor = obj->magicArmor();
-        int32_t hurt = m_value;
-        if (armor > 0) {
-            hurt -= armor;
-            obj->addMagicArmor(-m_value);
-        }
-        if (hurt > 0) {
-            obj->hurt(hurt);
-        }
-    }
-}
+MageCard::MageCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Mage, cast_type, name) {}
+MageCard::~MageCard() = default;
 
-DefenseCard::DefenseCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-DefenseCard::~DefenseCard() = default;
-void DefenseCard::cast(Player *obj) {
-    if (obj && !obj->isDead()) {
-        obj->addArmor(m_value);
-    }
-}
+PriestCard::PriestCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Mage, cast_type, name) {}
+PriestCard::~PriestCard() = default;
 
-MagicDefenseCard::MagicDefenseCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-MagicDefenseCard::~MagicDefenseCard() = default;
-void MagicDefenseCard::cast(Player *obj) {
-    if (obj && !obj->isDead()) {
-        obj->addMagicArmor(m_value);
-    }
-}
+TankCard::TankCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Tank, cast_type, name) {}
+TankCard::~TankCard() = default;
 
-HealthCard::HealthCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-HealthCard::~HealthCard() = default;
-void HealthCard::cast(Player *obj) {
-    if (obj && !obj->isDead()) {
-        obj->addHealth(m_value);
-    }
-}
+ArcherCard::ArcherCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Archer, cast_type, name) {}
+ArcherCard::~ArcherCard() = default;
 
-BuffCard::BuffCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-BuffCard::~BuffCard() = default;
-void BuffCard::cast(Player *obj [[maybe_unused]]) {}
+AssassinCard::AssassinCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Assassin, cast_type, name) {}
+AssassinCard::~AssassinCard() = default;
 
-DebuffCard::DebuffCard(std::string_view name, int32_t value)
-    : Card(name), m_value(value) {}
-DebuffCard::~DebuffCard() = default;
-void DebuffCard::cast(Player *obj [[maybe_unused]]) {}
+RangerCard::RangerCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Ranger, cast_type, name) {}
+RangerCard::~RangerCard() = default;
+
+HunterCard::HunterCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Hunter, cast_type, name) {}
+HunterCard::~HunterCard() = default;
+
+AlchemyCard::AlchemyCard(CardCastObj cast_type, std::string_view name)
+    : Card(CardType::Alchemy, cast_type, name) {}
+AlchemyCard::~AlchemyCard() = default;
 
 } // namespace cg

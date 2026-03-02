@@ -22,6 +22,7 @@ find_package(spdlog REQUIRED)
 set(SOURCE_FILES
   src/card.cpp
   src/player.cpp
+  src/factory.cpp
   tests/main.cpp
 )
 
