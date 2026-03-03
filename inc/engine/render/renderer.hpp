@@ -33,7 +33,15 @@ class Renderer {
     Renderer(const glm::ivec2 &size);
     ~Renderer();
 
+    const glm::ivec2 &renderSize() const { return m_size; }
+
     bool init();
+
+    void color(float r, float g, float b, float a = 1.0f);
+    void clear();
+    void draw();
+
+    void rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill = false);
 
     Renderer(Renderer &) = delete;
     Renderer(Renderer &&) = delete;

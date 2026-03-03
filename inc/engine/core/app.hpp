@@ -8,12 +8,15 @@ namespace cg::engine {
 class Time;
 class Renderer;
 struct Context;
+class Scene;
+class SceneManager;
 
 class App final {
   private:
     std::unique_ptr<Time> m_time;
     std::unique_ptr<Renderer> m_renderer;
     std::unique_ptr<Context> m_context;
+    std::unique_ptr<SceneManager> m_scene_manager;
 
   private:
     bool initAppInfo();
@@ -28,6 +31,10 @@ class App final {
     bool render();
     bool update();
     bool event(const SDL_Event *);
+
+    void pushScene(std::unique_ptr<Scene> &&scene);
+    void replaceScene(std::unique_ptr<Scene> &&scene);
+    void popScene();
 
     App(App &) = delete;
     App(App &&) = delete;

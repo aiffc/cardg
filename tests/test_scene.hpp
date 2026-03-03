@@ -1,0 +1,14 @@
+#pragma once
+
+#include "../inc/engine/scene/scene.hpp"
+
+class TestScene final : public cg::engine::Scene {
+  public:
+    using cg::engine::Scene::Scene;
+    ~TestScene() override = default;
+
+    void init(cg::engine::Context &context) override;
+    void update(float dt, cg::engine::Context &context) override;
+    void render(cg::engine::Context &context) override;
+    void event(cg::engine::Context &context) override;
+};

@@ -7,21 +7,21 @@ namespace cg::engine {
 
 Time::Time(uint32_t fps) : m_fps{fps} {
     if (fps == 0) {
-        spdlog::trace("init time manager");
+        spdlog::info("init time manager");
         m_frame_interval = 0.0;
     } else {
-        spdlog::trace("time manager set fps {}", fps);
+        spdlog::info("time manager set fps {}", fps);
         m_frame_interval = 1.0 / fps;
     }
 }
 Time::~Time() = default;
 
 void Time::init() {
-    spdlog::trace("time manager init done");
+    spdlog::info("time manager init done");
     m_last_frame_time = SDL_GetTicksNS();
     m_start_frame_time = m_last_frame_time;
 }
-void Time::deinit() { spdlog::trace("time manager quit"); }
+void Time::deinit() { spdlog::info("time manager quit"); }
 
 void Time::limit(uint64_t l2s_interval) {
 
@@ -36,10 +36,10 @@ void Time::limit(uint64_t l2s_interval) {
 void Time::setfps(uint32_t fps) {
     m_fps = fps;
     if (fps == 0) {
-        spdlog::trace("time manager set fps no limit");
+        spdlog::info("time manager set fps no limit");
         m_frame_interval = 0.0;
     } else {
-        spdlog::trace("time manager set fps {}", fps);
+        spdlog::info("time manager set fps {}", fps);
         m_frame_interval = 1.0 / fps;
     }
 }

@@ -2,10 +2,11 @@
 #include "../inc/character.hpp"
 #include "../inc/engine/core/app.hpp"
 #include "../inc/factory.hpp"
+#include "test_scene.hpp"
 #include <SDL3/SDL_init.h>
-#include <algorithm>
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <utility>
 #define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -58,6 +59,10 @@ SDL_AppResult SDL_AppInit(void **appstate [[maybe_unused]],
     if (!app->init()) {
         return SDL_APP_FAILURE;
     }
+
+    auto scene = std::make_unique<TestScene>("test");
+    app->pushScene(std::move(scene));
+
     return SDL_APP_CONTINUE;
 }
 

@@ -19,9 +19,48 @@ bool Renderer::init() {
                       SDL_GetError());
         return false;
     }
+
+    SDL_SetRenderLogicalPresentation(renderer, 640, 360,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     m_window = std::unique_ptr<SDL_Window, WindowDeleter>(window);
     m_renderer = std::unique_ptr<SDL_Renderer, RendererDeleter>(renderer);
     return true;
+}
+
+void Renderer::color(float r, float g, float b, float a) {
+    if (m_renderer) {
+        SDL_SetRenderDrawColorFloat(m_renderer.get(), r, g, b, a);
+    }
+}
+
+void Renderer::clear() {
+    if (m_renderer) {
+        SDL_RenderClear(m_renderer.get());
+    }
+}
+
+void Renderer::draw() {
+    if (m_renderer) {
+        SDL_RenderPresent(m_renderer.get());
+    }
+}
+
+void Renderer::rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill) {
+    if (m_renderer) {
+        SDL_FRect rect{
+            .x = pos.x,
+            .y = pos.y,
+            .w = size.x,
+            .h = size.y,
+
+        };
+        if (fill) {
+            SDL_RenderFillRect(m_renderer.get(), &rect);
+        } else {
+            SDL_RenderRect(m_renderer.get(), &rect);
+        }
+    }
 }
 
 } // namespace cg::engine

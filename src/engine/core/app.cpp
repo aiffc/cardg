@@ -2,6 +2,8 @@
 #include "../../../inc/engine/core/context.hpp"
 #include "../../../inc/engine/core/time.hpp"
 #include "../../../inc/engine/render/renderer.hpp"
+#include "../../../inc/engine/scene/manager.hpp"
+#include "../../../inc/engine/scene/scene.hpp"
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
@@ -16,7 +18,7 @@ App::App() = default;
 App::~App() = default;
 
 bool App::initAppInfo() {
-    if (!SDL_SetAppMetadata("trial", "0.1", "trial")) {
+    if (!SDL_SetAppMetadata("trial", "0.1", "card game")) {
         spdlog::error("failed to set app meta{}", SDL_GetError());
         return false;
     }
@@ -53,27 +55,36 @@ bool App::init() {
     m_time = std::make_unique<Time>(144);
     m_time->init();
 
-    m_renderer = std::make_unique<Renderer>(glm::ivec2{1024, 980});
+    m_renderer = std::make_unique<Renderer>(glm::ivec2{1280, 720});
     m_renderer->init();
 
     m_context = std::make_unique<Context>(*m_renderer);
+    m_scene_manager = std::make_unique<SceneManager>(*m_context);
 
     return true;
 }
 
 void App::deinit() {
+    // TODO save scene data
+    m_scene_manager.reset();
     m_renderer.reset();
     m_context.reset();
     m_time->deinit();
     SDL_Quit();
 }
 
-bool App::render() { return true; }
+bool App::render() {
+    m_renderer->color(0.0f, 0.0f, 0.0f);
+    m_renderer->clear();
+    m_scene_manager->render();
+    m_renderer->draw();
+    return true;
+}
 
 bool App::update() {
     m_time->update();
-    // float dt = m_time->getDeltaTime();
-
+    float dt = m_time->getDeltaTime();
+    m_scene_manager->update(dt);
     return true;
 }
 
@@ -81,6 +92,15 @@ bool App::event(const SDL_Event *event [[maybe_unused]]) {
     if (event->type == SDL_EVENT_QUIT) {
         return false;
     }
+    m_scene_manager->event();
     return true;
 }
+
+void App::pushScene(std::unique_ptr<Scene> &&scene) {
+    m_scene_manager->push(std::move(scene));
+}
+void App::replaceScene(std::unique_ptr<Scene> &&scene) {
+    m_scene_manager->replace(std::move(scene));
+}
+void App::popScene() { m_scene_manager->pop(); }
 } // namespace cg::engine
