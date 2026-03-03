@@ -10,19 +10,22 @@ class Card;
 
 using CardHeap = std::vector<std::unique_ptr<Card>>;
 using CardHand = std::vector<std::unique_ptr<Card>>;
+using CardRecycleBin = std::vector<std::unique_ptr<Card>>;
 
-class Player {
+class Character {
   private:
     CardHeap m_heap;
     CardHand m_hand;
+    CardRecycleBin m_recycle_bin;
+    int32_t m_select_card_index = -1;
     int32_t m_health;
     int32_t m_armor;
     int32_t m_magic_armor;
     // TODO buff
 
   public:
-    Player();
-    ~Player();
+    Character();
+    ~Character();
 
     void draw();
     void disrupt();
@@ -32,6 +35,7 @@ class Player {
 
     void showHand() const;
     void showHeap() const;
+    void showRecycleBin() const;
 
     /* return true if player is dead */
     bool isDead() const { return m_health <= 0; }
@@ -49,10 +53,22 @@ class Player {
     void magicArmor(int32_t v) { m_magic_armor = v; }
     void addMagicArmor(int32_t v) { m_magic_armor += v; }
 
-    Player(Player &) = delete;
-    Player(Player &&) = delete;
-    Player &operator&=(Player &) = delete;
-    Player &operator&=(Player &&) = delete;
+    int32_t select() const { return m_select_card_index; }
+    void select(int32_t v) {
+        if ((size_t)v >= m_hand.size() || v < 0) {
+            m_select_card_index = -1;
+        } else {
+            m_select_card_index = v;
+        }
+    }
+
+    void useSelect(Character *cast_obj);
+    void useSelect(std::vector<Character *> &cast_obj);
+
+    Character(Character &) = delete;
+    Character(Character &&) = delete;
+    Character &operator&=(Character &) = delete;
+    Character &operator&=(Character &&) = delete;
 };
 
 } // namespace cg

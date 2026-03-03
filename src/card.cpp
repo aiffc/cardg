@@ -1,5 +1,5 @@
 #include "../inc/card.hpp"
-#include "../inc/player.hpp"
+#include "../inc/character.hpp"
 #include <string_view>
 
 namespace cg {

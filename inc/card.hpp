@@ -7,7 +7,7 @@
 
 namespace cg {
 
-class Player;
+class Character;
 
 enum class CardType {
     Common,
@@ -33,8 +33,8 @@ class Card {
     CardCastObj m_cast_type;
     std::string m_name;
     std::string m_doc{};
-    std::function<void(std::vector<Player *> &cast_obj)> m_effect_group;
-    std::function<void(Player *cast_obj)> m_effect_single;
+    std::function<void(std::vector<Character *> &cast_obj)> m_effect_group;
+    std::function<void(Character *cast_obj)> m_effect_single;
 
   public:
     Card(CardType type, CardCastObj cast_type, std::string_view v);
@@ -43,16 +43,16 @@ class Card {
     const std::string &name() const { return m_name; }
     void name(std::string_view v) { m_name = std::string(v); }
 
-    void
-    effect(const std::function<void(std::vector<Player *> &cast_obj)> &effect) {
+    void effect(
+        const std::function<void(std::vector<Character *> &cast_obj)> &effect) {
         m_effect_group = effect;
     }
 
-    void effect(const std::function<void(Player *cast_obj)> &effect) {
+    void effect(const std::function<void(Character *cast_obj)> &effect) {
         m_effect_single = effect;
     }
 
-    void cast(std::vector<Player *> &obj) {
+    void cast(std::vector<Character *> &obj) {
         if (m_effect_group) {
             m_effect_group(obj);
         } else {
@@ -60,7 +60,7 @@ class Card {
         }
     }
 
-    void cast(Player *obj) {
+    void cast(Character *obj) {
         if (m_effect_single && obj) {
             m_effect_single(obj);
         } else {
