@@ -18,7 +18,7 @@ class Character {
     CardHand m_hand;
     CardRecycleBin m_recycle_bin;
     int32_t m_select_card_index = -1;
-    int32_t m_health;
+    int32_t m_health = 100;
     int32_t m_armor;
     int32_t m_magic_armor;
     // TODO buff

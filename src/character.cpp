@@ -73,6 +73,7 @@ void Character::showRecycleBin() const {
 void Character::useSelect(Character *cast_obj) {
     if (m_select_card_index < 0 ||
         (size_t)m_select_card_index >= m_hand.size()) {
+        spdlog::warn("can not use select card {}", m_select_card_index);
         return;
     }
 

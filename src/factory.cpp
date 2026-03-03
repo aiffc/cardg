@@ -1,6 +1,7 @@
 #include "../inc/factory.hpp"
 #include "../inc/card.hpp"
 #include "../inc/character.hpp"
+#include <spdlog/spdlog.h>
 
 namespace cg {
 /* ---------------------------------------------------------------  */
