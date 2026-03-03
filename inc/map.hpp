@@ -16,12 +16,13 @@ class Map {
     std::vector<std::unique_ptr<Character>> m_monster_objs;
 
   private:
-    void layout(const glm::ivce2 &window_size);
+    void layout(const glm::ivec2 &render_size);
 
   public:
-    Map(const glm::vec2 &m_pos, const glm::ivec2 &size);
+    Map(const glm::ivec2 &render_size);
     ~Map();
 
+    void init();
     void render(cg::engine::Context &context);
 
     Map(Map &) = delete;

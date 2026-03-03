@@ -97,6 +97,9 @@ bool App::event(const SDL_Event *event) {
     if (m_input_manager->shouldQuit()) {
         return false;
     }
+    if (m_input_manager->resized()) {
+        m_renderer->update();
+    }
 
     m_scene_manager->event();
     return true;

@@ -1,5 +1,8 @@
 #include "../../../inc/engine/input/manager.hpp"
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_video.h>
 #include <algorithm>
+#include <fmt/format.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +34,7 @@ void InputManager::update(const SDL_Event &event) {
             state = InputActionState::None;
         }
     }
+    m_resized = false;
 
     switch (event.type) {
     case SDL_EVENT_KEY_DOWN:
@@ -69,6 +73,9 @@ void InputManager::update(const SDL_Event &event) {
     } break;
     case SDL_EVENT_MOUSE_MOTION:
         m_mouse_pos = glm::vec2{event.motion.x, event.motion.y};
+        break;
+    case SDL_EVENT_WINDOW_RESIZED:
+        m_resized = true;
         break;
     case SDL_EVENT_QUIT:
         m_quit = true;

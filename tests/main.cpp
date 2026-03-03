@@ -2,6 +2,7 @@
 #include "../inc/character.hpp"
 #include "../inc/engine/core/app.hpp"
 #include "../inc/factory.hpp"
+#include "../inc/map.hpp"
 #include "test_scene.hpp"
 #include <SDL3/SDL_init.h>
 #include <memory>

@@ -31,6 +31,7 @@ set(SOURCE_FILES
   src/card.cpp
   src/character.cpp
   src/factory.cpp
+  src/map.cpp
   tests/test_scene.cpp
   tests/main.cpp
 )

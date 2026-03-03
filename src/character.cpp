@@ -24,7 +24,7 @@ void Character::draw() {
         }
     }
     auto head = m_heap.begin();
-    m_hand.push_back(std::move(m_heap[0]));
+    m_hand.push_back(std::move(*head));
     m_heap.erase(head);
 }
 

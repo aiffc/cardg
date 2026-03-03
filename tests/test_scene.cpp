@@ -1,8 +1,11 @@
 #include "test_scene.hpp"
+#include "../inc/map.hpp"
+#include <memory>
 #include <spdlog/spdlog.h>
 
 void TestScene::init(cg::engine::Context &context) {
     cg::engine::Scene::init(context);
+    m_map = std::make_unique<cg::Map>(context.renderer.logicalPresentation());
 }
 
 void TestScene::update(float dt [[maybe_unused]],
@@ -11,6 +14,7 @@ void TestScene::update(float dt [[maybe_unused]],
 void TestScene::render(cg::engine::Context &context) {
     context.renderer.color(1.0f, 0.0f, 0.0f);
     context.renderer.rect({10.0f, 10.0f}, {150.0f, 150.0f});
+    m_map->render(context);
 }
 
 void TestScene::event(cg::engine::Context &context) {

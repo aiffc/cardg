@@ -44,6 +44,11 @@ class Renderer final {
     void rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill = false);
     glm::vec2 getLogicPos(const glm::vec2 &mouse_pos);
 
+    void logicalPresentation(const glm::ivec2 &v);
+    glm::ivec2 logicalPresentation() const;
+
+    void update();
+
     Renderer(Renderer &) = delete;
     Renderer(Renderer &&) = delete;
     Renderer &operator=(Renderer &) = delete;

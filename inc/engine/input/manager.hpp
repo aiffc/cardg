@@ -30,6 +30,7 @@ class InputManager final {
         {"select", InputActionState::None},
         {"cancle", InputActionState::None},
     };
+    bool m_resized{false};
 
   private:
     static inline SDL_Scancode getScancode(std::string_view key) {
@@ -50,6 +51,8 @@ class InputManager final {
 
     bool shouldQuit() const { return m_quit; }
     void setQuit(bool p = true) { m_quit = p; }
+
+    bool resized() const { return m_resized; }
 
     void update(const SDL_Event &);
 

@@ -63,13 +63,35 @@ void Renderer::rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill) {
     }
 }
 
+void Renderer::logicalPresentation(const glm::ivec2 &v) {
+    if (m_renderer) {
+        SDL_SetRenderLogicalPresentation(m_renderer.get(), v.x, v.y,
+                                         SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    }
+}
+glm::ivec2 Renderer::logicalPresentation() const {
+    glm::ivec2 ret{0, 0};
+    SDL_RendererLogicalPresentation mode = SDL_LOGICAL_PRESENTATION_LETTERBOX;
+    if (m_renderer) {
+        SDL_GetRenderLogicalPresentation(m_renderer.get(), &ret.x, &ret.y,
+                                         &mode);
+    }
+    return ret;
+}
+
 glm::vec2 Renderer::getLogicPos(const glm::vec2 &mouse_pos) {
-    glm::vec2 logic_size{640.0f, 360.0f};
+    glm::ivec2 logic_size = logicalPresentation();
     glm::vec2 scale{
-        logic_size.x / static_cast<float>(m_size.x),
-        logic_size.y / static_cast<float>(m_size.y),
+        static_cast<float>(logic_size.x) / static_cast<float>(m_size.x),
+        static_cast<float>(logic_size.y) / static_cast<float>(m_size.y),
     };
     return mouse_pos * scale;
 }
 
+void Renderer::update() {
+    if (m_window) {
+        spdlog::info("update window size");
+        SDL_GetWindowSize(m_window.get(), &m_size.x, &m_size.y);
+    }
+}
 } // namespace cg::engine
