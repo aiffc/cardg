@@ -63,4 +63,13 @@ void Renderer::rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill) {
     }
 }
 
+glm::vec2 Renderer::getLogicPos(const glm::vec2 &mouse_pos) {
+    glm::vec2 logic_size{640.0f, 360.0f};
+    glm::vec2 scale{
+        logic_size.x / static_cast<float>(m_size.x),
+        logic_size.y / static_cast<float>(m_size.y),
+    };
+    return mouse_pos * scale;
+}
+
 } // namespace cg::engine

@@ -3,6 +3,7 @@
 #include "character.hpp"
 #include "engine/core/context.hpp"
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
 namespace cg {
@@ -11,8 +12,8 @@ class Map {
   private:
     glm::vec2 m_pos;
     glm::ivec2 m_size;
-    std::vector<Character> m_player_objs;
-    std::vector<Character> m_monster_objs;
+    std::vector<std::unique_ptr<Character>> m_player_objs;
+    std::vector<std::unique_ptr<Character>> m_monster_objs;
 
   private:
     void layout(const glm::ivce2 &window_size);

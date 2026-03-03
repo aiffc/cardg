@@ -7,6 +7,7 @@ namespace cg::engine {
 
 class Time;
 class Renderer;
+class InputManager;
 struct Context;
 class Scene;
 class SceneManager;
@@ -15,6 +16,7 @@ class App final {
   private:
     std::unique_ptr<Time> m_time;
     std::unique_ptr<Renderer> m_renderer;
+    std::unique_ptr<InputManager> m_input_manager;
     std::unique_ptr<Context> m_context;
     std::unique_ptr<SceneManager> m_scene_manager;
 

@@ -25,6 +25,7 @@ set(SOURCE_FILES
   src/engine/core/app.cpp
   src/engine/core/time.cpp
   src/engine/render/renderer.cpp
+  src/engine/input/manager.cpp
   src/engine/scene/scene.cpp
   src/engine/scene/manager.cpp
   src/card.cpp

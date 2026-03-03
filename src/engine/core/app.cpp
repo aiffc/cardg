@@ -1,6 +1,7 @@
 #include "../../../inc/engine/core/app.hpp"
 #include "../../../inc/engine/core/context.hpp"
 #include "../../../inc/engine/core/time.hpp"
+#include "../../../inc/engine/input/manager.hpp"
 #include "../../../inc/engine/render/renderer.hpp"
 #include "../../../inc/engine/scene/manager.hpp"
 #include "../../../inc/engine/scene/scene.hpp"
@@ -58,7 +59,9 @@ bool App::init() {
     m_renderer = std::make_unique<Renderer>(glm::ivec2{1280, 720});
     m_renderer->init();
 
-    m_context = std::make_unique<Context>(*m_renderer);
+    m_input_manager = std::make_unique<InputManager>();
+
+    m_context = std::make_unique<Context>(*m_renderer, *m_input_manager);
     m_scene_manager = std::make_unique<SceneManager>(*m_context);
 
     return true;
@@ -67,6 +70,7 @@ bool App::init() {
 void App::deinit() {
     // TODO save scene data
     m_scene_manager.reset();
+    m_input_manager.reset();
     m_renderer.reset();
     m_context.reset();
     m_time->deinit();
@@ -88,10 +92,12 @@ bool App::update() {
     return true;
 }
 
-bool App::event(const SDL_Event *event [[maybe_unused]]) {
-    if (event->type == SDL_EVENT_QUIT) {
+bool App::event(const SDL_Event *event) {
+    m_input_manager->update(*event);
+    if (m_input_manager->shouldQuit()) {
         return false;
     }
+
     m_scene_manager->event();
     return true;
 }

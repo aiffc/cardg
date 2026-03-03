@@ -7,7 +7,7 @@
 
 namespace cg::engine {
 // TODO use vulkan for now just use SDL renderer
-class Renderer {
+class Renderer final {
   private:
     glm::ivec2 m_size;
     struct RendererDeleter {
@@ -42,6 +42,7 @@ class Renderer {
     void draw();
 
     void rect(const glm::vec2 &pos, const glm::vec2 &size, bool fill = false);
+    glm::vec2 getLogicPos(const glm::vec2 &mouse_pos);
 
     Renderer(Renderer &) = delete;
     Renderer(Renderer &&) = delete;
