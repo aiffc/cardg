@@ -57,7 +57,10 @@ bool App::init() {
     m_time->init();
 
     m_renderer = std::make_unique<Renderer>(glm::ivec2{1280, 720});
-    m_renderer->init();
+    if (!m_renderer->init()) {
+        spdlog::error("failed to create vulkan render");
+        return false;
+    }
 
     m_input_manager = std::make_unique<InputManager>();
 
@@ -78,10 +81,11 @@ void App::deinit() {
 }
 
 bool App::render() {
-    m_renderer->color(0.0f, 0.0f, 0.0f);
-    m_renderer->clear();
-    m_scene_manager->render();
-    m_renderer->draw();
+    if (m_renderer->begin(1.0)) {
+        // m_scene_manager->render();
+        m_renderer->end();
+    }
+
     return true;
 }
 
@@ -96,9 +100,6 @@ bool App::event(const SDL_Event *event) {
     m_input_manager->update(*event);
     if (m_input_manager->shouldQuit()) {
         return false;
-    }
-    if (m_input_manager->resized()) {
-        m_renderer->update();
     }
 
     m_scene_manager->event();

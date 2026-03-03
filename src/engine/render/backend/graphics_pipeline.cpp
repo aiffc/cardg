@@ -1,0 +1,226 @@
+#include "../../../../inc/engine/render/backend/graphics_pipeline.hpp"
+#include "../../../../inc/engine/render/backend/device.hpp"
+#include "../../../../inc/engine/render/backend/util.hpp"
+#include <SDL3/SDL_iostream.h>
+#include <cstdint>
+#include <spdlog/spdlog.h>
+#include <vector>
+#include <vulkan/vulkan_core.h>
+
+namespace cg::engine::backend {
+
+GraphicsPipeline::GraphicsPipeline(Device &device) : m_device(device) {}
+
+GraphicsPipeline::~GraphicsPipeline() {
+    if (*m_device != VK_NULL_HANDLE) {
+        vkDeviceWaitIdle(*m_device);
+    }
+
+    if (*m_device != VK_NULL_HANDLE && m_pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(*m_device, m_pipeline, nullptr);
+        m_pipeline = VK_NULL_HANDLE;
+    }
+}
+
+VkShaderModule GraphicsPipeline::createShaderModule(std::string_view path) {
+    if (*m_device == VK_NULL_HANDLE) {
+        spdlog::error("invalid pipeline {}", __LINE__);
+        return VK_NULL_HANDLE;
+    }
+    size_t size = 0;
+    void *code = SDL_LoadFile(path.data(), &size);
+
+    VkShaderModuleCreateInfo info{
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .codeSize = size,
+        .pCode = static_cast<uint32_t *>(code),
+    };
+    VkShaderModule module = VK_NULL_HANDLE;
+    if (VK_SUCCESS !=
+        vkCreateShaderModule(*m_device, &info, nullptr, &module)) {
+        spdlog::error("failed to create shader module");
+        return VK_NULL_HANDLE;
+    }
+    return module;
+}
+
+void GraphicsPipeline::destroyAllShaderModule() {
+    if (*m_device == VK_NULL_HANDLE) {
+        spdlog::error("invalid pipeline {}", __LINE__);
+        return;
+    }
+    for (auto &info : m_shader_stages) {
+        if (info.module != VK_NULL_HANDLE) {
+            vkDestroyShaderModule(*m_device, info.module, nullptr);
+        }
+    }
+}
+
+void GraphicsPipeline::addShader(const VkShaderStageFlagBits &stage,
+                                 std::string_view shader_path,
+                                 const VkSpecializationInfo *special_info,
+                                 std::string_view name) {
+    VkShaderModule module = createShaderModule(shader_path);
+    VkPipelineShaderStageCreateInfo info{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .stage = stage,
+        .module = module,
+        .pName = name.data(),
+        .pSpecializationInfo = special_info,
+    };
+    m_shader_stages.push_back(info);
+}
+
+bool GraphicsPipeline::init(VkPipelineLayout &layout) {
+    if (*m_device == VK_NULL_HANDLE) {
+        spdlog::error("invalid graphics pipeline {}", __LINE__);
+        return false;
+    }
+    VkPipelineVertexInputStateCreateInfo vertex_input_info =
+        fillPipelineVertexInput(m_vertex_bindings, m_vertex_attributes);
+    VkPipelineInputAssemblyStateCreateInfo input_assembly_info =
+        fillPipelineInutAssembly(m_topology);
+    VkPipelineTessellationStateCreateInfo tessellation_info =
+        fillPipelineTessllation();
+    VkPipelineViewportStateCreateInfo viewport_info =
+        fillPipelineViewport(m_viewports, m_scissors);
+    VkPipelineRasterizationStateCreateInfo rasterization_info =
+        fillPipelineRasterization(m_polygon_mode);
+    VkPipelineMultisampleStateCreateInfo multiple_sample_info =
+        fillPipelineMultisample(m_device.sampleCount());
+    VkPipelineDepthStencilStateCreateInfo depth_stencil_info =
+        fillPipelineDepthStencil();
+    VkPipelineColorBlendStateCreateInfo color_blend_info =
+        fillPipelineColorBlend(m_color_blend_attachment);
+
+    std::vector<VkDynamicState> dynamic_state = {VK_DYNAMIC_STATE_VIEWPORT,
+                                                 VK_DYNAMIC_STATE_SCISSOR,
+                                                 VK_DYNAMIC_STATE_LINE_WIDTH};
+    VkPipelineDynamicStateCreateInfo dynamic_info =
+        fillPipelineDynamicState(dynamic_state);
+
+    // custom set
+    rasterization_info.frontFace = m_rasterization_front_face;
+
+    VkFormat color_format = m_device.format();
+    VkPipelineRenderingCreateInfoKHR rendering_info{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .viewMask = 0,
+        .colorAttachmentCount = 1,
+        .pColorAttachmentFormats = &color_format,
+        .depthAttachmentFormat = VK_FORMAT_UNDEFINED,
+        .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
+    };
+
+    VkGraphicsPipelineCreateInfo info{
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .stageCount = static_cast<uint32_t>(m_shader_stages.size()),
+        .pStages = m_shader_stages.data(),
+        .pVertexInputState = &vertex_input_info,
+        .pInputAssemblyState = &input_assembly_info,
+        .pTessellationState = &tessellation_info,
+        .pViewportState = &viewport_info,
+        .pRasterizationState = &rasterization_info,
+        .pMultisampleState = &multiple_sample_info,
+        .pDepthStencilState = &depth_stencil_info,
+        .pColorBlendState = &color_blend_info,
+        .pDynamicState = &dynamic_info,
+        .layout = layout,
+        .renderPass = VK_NULL_HANDLE,
+        .subpass = 0,
+        .basePipelineHandle = VK_NULL_HANDLE,
+        .basePipelineIndex = 0,
+    };
+    if (m_device.sampleCount() != VK_SAMPLE_COUNT_1_BIT) {
+        info.pNext = &rendering_info;
+    }
+    if (VK_SUCCESS != vkCreateGraphicsPipelines(*m_device, VK_NULL_HANDLE, 1,
+                                                &info, nullptr, &m_pipeline)) {
+        spdlog::error("failed to create graphics pipeline");
+        return false;
+    }
+    destroyAllShaderModule();
+    return true;
+}
+
+void GraphicsPipeline::addViewport(float w, float h, float x, float y,
+                                   float min, float max) {
+    VkViewport v{
+        .x = x,
+        .y = y,
+        .width = w,
+        .height = h,
+        .minDepth = min,
+        .maxDepth = max,
+    };
+    m_viewports.push_back(v);
+}
+void GraphicsPipeline::addScissor(uint32_t w, uint32_t h, int32_t x,
+                                  int32_t y) {
+    VkRect2D v{
+        .offset =
+            {
+                .x = x,
+                .y = y,
+            },
+        .extent =
+            {
+                .width = w,
+                .height = h,
+
+            },
+
+    };
+    m_scissors.push_back(v);
+}
+
+void GraphicsPipeline::addColorBlendAttachemt(
+    const VkColorComponentFlags &color_write_mask, bool blend_enable,
+    const VkBlendFactor &src_color_blend_factor,
+    const VkBlendFactor &dst_color_blend_factor,
+    const VkBlendOp &color_blend_op,
+    const VkBlendFactor &src_alpha_blend_factor,
+    const VkBlendFactor &dst_alpha_blend_factor,
+    const VkBlendOp &alpha_blend_op) {
+    VkPipelineColorBlendAttachmentState v{
+        .blendEnable = blend_enable ? VK_TRUE : VK_FALSE,
+        .srcColorBlendFactor = src_color_blend_factor,
+        .dstColorBlendFactor = dst_color_blend_factor,
+        .colorBlendOp = color_blend_op,
+        .srcAlphaBlendFactor = src_alpha_blend_factor,
+        .dstAlphaBlendFactor = dst_alpha_blend_factor,
+        .alphaBlendOp = alpha_blend_op,
+        .colorWriteMask = color_write_mask,
+    };
+    m_color_blend_attachment.push_back(v);
+}
+
+void GraphicsPipeline::addBinding(uint32_t binding, uint32_t stride,
+                                  VkVertexInputRate rate) {
+    VkVertexInputBindingDescription n{
+        .binding = binding,
+        .stride = stride,
+        .inputRate = rate,
+    };
+    m_vertex_bindings.push_back(n);
+}
+
+void GraphicsPipeline::addAttribute(uint32_t location, uint32_t binding,
+                                    VkFormat format, uint32_t offset) {
+    VkVertexInputAttributeDescription n{
+        .location = location,
+        .binding = binding,
+        .format = format,
+        .offset = offset,
+    };
+    m_vertex_attributes.push_back(n);
+}
+
+} // namespace cg::engine::backend

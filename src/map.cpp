@@ -20,9 +20,9 @@ void Map::init() {
     // TODO
 }
 
-void Map::render(cg::engine::Context &context) {
-    context.renderer.color(0.0f, 1.0f, 0.0f);
-    context.renderer.rect(m_pos, m_size);
+void Map::render(cg::engine::Context &context [[maybe_unused]]) {
+    // context.renderer.color(0.0f, 1.0f, 0.0f);
+    // context.renderer.rect(m_pos, m_size);
 }
 
 } // namespace cg
