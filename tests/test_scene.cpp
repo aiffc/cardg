@@ -4,6 +4,8 @@
 #include <memory>
 #include <spdlog/spdlog.h>
 
+static cg::engine::buffer::BaseTextureArrayU globleV{0.0f};
+
 void TestScene::init(cg::engine::Context &context) {
     // cg::engine::Scene::init(context);
     // const std::vector<cg::engine::buffer::Base> vertices = {
@@ -22,17 +24,27 @@ void TestScene::init(cg::engine::Context &context) {
         {{0.5f, 0.5f}, {1.0f, 1.0f}},
         {{-0.5f, 0.5f}, {0.0f, 1.0f}},
     };
-    (*context.renderer).addBaseTexturePipelineVertexBuffer(vertices);
+    (*context.renderer).addBaseTextureArrayPipelineVertexBuffer(vertices);
     std::vector<uint32_t> indexs{0, 1, 2, 2, 3, 0};
-    (*context.renderer).addBaseTexturePipelineIndexBuffer(indexs);
-    (*context.renderer).addBaseTextureTexture("../asset/test.png");
+    (*context.renderer).addBaseTextureArrayPipelineIndexBuffer(indexs);
+    (*context.renderer)
+        .addBaseTextureArrayTexture(
+            {"../asset/test.png", "../asset/test2.png"});
 }
 
 void TestScene::update(float dt [[maybe_unused]],
-                       cg::engine::Context &context [[maybe_unused]]) {}
-
-void TestScene::render(cg::engine::Context &context [[maybe_unused]]) {
-    context.renderer.drawBaseTexture();
+                       cg::engine::Context &context [[maybe_unused]]) {
+    (*context.renderer).mapBaseTextureArrayUniform(globleV);
 }
 
-void TestScene::event(cg::engine::Context &context [[maybe_unused]]) {}
+void TestScene::render(cg::engine::Context &context [[maybe_unused]]) {
+    context.renderer.drawBaseTextureArray();
+}
+
+void TestScene::event(cg::engine::Context &context [[maybe_unused]]) {
+    if (context.input.isActionPress("select")) {
+        globleV.index = 1.0f;
+    } else {
+        globleV.index = 0.0f;
+    }
+}

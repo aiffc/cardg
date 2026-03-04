@@ -8,6 +8,7 @@ class Map;
 }
 
 class TestScene final : public cg::engine::Scene {
+  private:
   public:
     using cg::engine::Scene::Scene;
     ~TestScene() override = default;

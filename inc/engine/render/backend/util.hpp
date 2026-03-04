@@ -69,7 +69,8 @@ struct GPUInfo {
 };
 
 void imageLayoutTrans(VkCommandBuffer &cmd, VkImage &image,
-                      VkImageLayout old_layout, VkImageLayout new_layout);
+                      VkImageLayout old_layout, VkImageLayout new_layout,
+                      uint32_t layer_count = 1);
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphics;

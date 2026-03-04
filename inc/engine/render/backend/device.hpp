@@ -70,12 +70,14 @@ class Device {
                                    VkImageUsageFlags usage,
                                    VkMemoryPropertyFlags properties,
                                    VkImage &image, VkDeviceMemory &memory);
-    bool internalCreateImage(uint32_t w, uint32_t h, VkFormat format,
-                             VkImageTiling tilling, VkImageUsageFlags usage,
+    bool internalCreateImage(uint32_t layer_cout, uint32_t w, uint32_t h,
+                             VkFormat format, VkImageTiling tilling,
+                             VkImageUsageFlags usage,
                              VkMemoryPropertyFlags properties, VkImage &image,
                              VkDeviceMemory &memory);
     void transitionImageLayout(VkImage &image, VkImageLayout old_layout,
-                               VkImageLayout new_layout);
+                               VkImageLayout new_layout,
+                               uint32_t layer_count = 1);
 
   public:
     Device(VkSurfaceKHR &surface,

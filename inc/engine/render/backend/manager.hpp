@@ -23,6 +23,9 @@ struct BaseTexture {
     glm::vec2 coord;
 };
 
+struct BaseTextureArrayU {
+    float index;
+};
 } // namespace cg::engine::buffer
 
 namespace cg::engine::backend {
@@ -53,11 +56,13 @@ class RendererManager final {
   private:
     [[nodiscard]] bool initBasePipeline(const glm::vec2 &size);
     [[nodiscard]] bool initBaseTexturePipeline(const glm::vec2 &size);
+    [[nodiscard]] bool initBaseTextureArrayPipeline(const glm::vec2 &size);
     [[nodiscard]] bool init(const glm::vec2 &size);
     void resize(const glm::vec2 &v) { m_window_size = v; }
 
     void drawBase();
     void drawBaseTexture();
+    void drawBaseTextureArray();
 
   private:
     void setViewport(float w = 0.0f, float h = 0.0f, float x = 0.0f,
@@ -86,6 +91,14 @@ class RendererManager final {
         const std::vector<cg::engine::buffer::BaseTexture> &data);
     void addBaseTexturePipelineIndexBuffer(const std::vector<uint32_t> &data);
     void addBaseTextureTexture(std::string_view path);
+
+    void addBaseTextureArrayPipelineVertexBuffer(
+        const std::vector<cg::engine::buffer::BaseTexture> &data);
+    void
+    addBaseTextureArrayPipelineIndexBuffer(const std::vector<uint32_t> &data);
+    void addBaseTextureArrayTexture(const std::vector<std::string_view> &path);
+    void
+    mapBaseTextureArrayUniform(cg::engine::buffer::BaseTextureArrayU &index);
 
     RendererManager(RendererManager &) = delete;
     RendererManager(RendererManager &&) = delete;

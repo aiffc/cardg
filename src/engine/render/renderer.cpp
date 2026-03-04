@@ -432,5 +432,6 @@ bool Renderer::end() {
 
 void Renderer::drawBase() { m_manager->drawBase(); }
 void Renderer::drawBaseTexture() { m_manager->drawBaseTexture(); }
+void Renderer::drawBaseTextureArray() { m_manager->drawBaseTextureArray(); }
 
 } // namespace cg::engine

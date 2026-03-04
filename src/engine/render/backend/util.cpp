@@ -168,7 +168,8 @@ fillPipelineDynamicState(const std::vector<VkDynamicState> &states) {
 }
 
 void imageLayoutTrans(VkCommandBuffer &cmd, VkImage &image,
-                      VkImageLayout old_layout, VkImageLayout new_layout) {
+                      VkImageLayout old_layout, VkImageLayout new_layout,
+                      uint32_t layer_count) {
     VkImageMemoryBarrier barrier{
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = nullptr,
@@ -185,7 +186,7 @@ void imageLayoutTrans(VkCommandBuffer &cmd, VkImage &image,
                 .baseMipLevel = 0,
                 .levelCount = 1,
                 .baseArrayLayer = 0,
-                .layerCount = 1,
+                .layerCount = layer_count,
             },
     };
     VkPipelineStageFlags source_stage = VK_PIPELINE_STAGE_NONE_KHR;

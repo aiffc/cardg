@@ -238,7 +238,7 @@ void Texture::copyFrom(VkBuffer &buffer, glm::ivec2 size,
 
     for (uint32_t i = 0; i < layer_count; ++i) {
         VkBufferImageCopy info{
-            .bufferOffset = static_cast<VkDeviceSize>(size.x * size.y * 4),
+            .bufferOffset = static_cast<VkDeviceSize>(i * size.x * size.y * 4),
             .bufferRowLength = 0,
             .bufferImageHeight = 0,
             .imageSubresource =

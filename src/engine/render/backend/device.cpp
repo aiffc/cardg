@@ -601,8 +601,9 @@ bool Device::internalCreateSampleImage(uint32_t w, uint32_t h, VkFormat format,
     return true;
 }
 
-bool Device::internalCreateImage(uint32_t w, uint32_t h, VkFormat format,
-                                 VkImageTiling tilling, VkImageUsageFlags usage,
+bool Device::internalCreateImage(uint32_t layer_count, uint32_t w, uint32_t h,
+                                 VkFormat format, VkImageTiling tilling,
+                                 VkImageUsageFlags usage,
                                  VkMemoryPropertyFlags properties,
                                  VkImage &image, VkDeviceMemory &memory) {
     VkImageCreateInfo image_info{
@@ -618,7 +619,7 @@ bool Device::internalCreateImage(uint32_t w, uint32_t h, VkFormat format,
                 .depth = 1,
             },
         .mipLevels = 1,
-        .arrayLayers = 1,
+        .arrayLayers = layer_count,
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .tiling = tilling,
         .usage = usage,
@@ -652,9 +653,10 @@ bool Device::internalCreateImage(uint32_t w, uint32_t h, VkFormat format,
 }
 
 void Device::transitionImageLayout(VkImage &image, VkImageLayout old_layout,
-                                   VkImageLayout new_layout) {
+                                   VkImageLayout new_layout,
+                                   uint32_t layer_count) {
     auto cmd = beginTemporaryCommand();
-    imageLayoutTrans(cmd, image, old_layout, new_layout);
+    imageLayoutTrans(cmd, image, old_layout, new_layout, layer_count);
     endTemporaryCommand(cmd);
 }
 
@@ -679,7 +681,7 @@ std::unique_ptr<Texture> Device::createTexture(std::string_view path) {
     stbi_image_free(pixels);
 
     internalCreateImage(
-        width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+        1, width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
 
@@ -719,7 +721,7 @@ Device::createTextureArray(const std::vector<std::string_view> &paths) {
         pixels =
             stbi_load(path.data(), &width, &height, &channels, STBI_rgb_alpha);
         memcpy((uint8_t *)buffer->data + i * single_size, pixels,
-               static_cast<size_t>(texture_size));
+               static_cast<size_t>(single_size));
         stbi_image_free(pixels);
         pixels = nullptr;
         i++;
@@ -729,15 +731,17 @@ Device::createTextureArray(const std::vector<std::string_view> &paths) {
     auto ret = std::make_unique<Texture>(*this);
 
     internalCreateImage(
-        width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+        paths.size(), width, height, VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
 
     transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, paths.size());
     ret->copyFrom(buffer->buffer, {width, height}, paths.size());
     transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                          paths.size());
     buffer.reset();
 
     ret->initArray(paths.size(), VK_FORMAT_R8G8B8A8_SRGB);
