@@ -23,9 +23,9 @@ void Buffer::bind(VkDeviceSize offset) {
     vkBindBufferMemory(*device, buffer, memory, offset);
 }
 
-void *Buffer::map(VkDeviceSize size) {
+void *Buffer::map(VkDeviceSize size, VkDeviceSize offset) {
     if (*device != VK_NULL_HANDLE) {
-        vkMapMemory(*device, memory, 0, size, 0, &data);
+        vkMapMemory(*device, memory, offset, size, 0, &data);
     } else {
         spdlog::error("invalid memory");
     }

@@ -693,4 +693,54 @@ std::unique_ptr<Texture> Device::createTexture(std::string_view path) {
     ret->init(VK_FORMAT_R8G8B8A8_SRGB);
     return ret;
 }
+
+// TODO All texture size should be same
+std::unique_ptr<Texture>
+Device::createTextureArray(const std::vector<std::string_view> &paths) {
+    int width, height, channels;
+    stbi_uc *pixels =
+        stbi_load(paths[0].data(), &width, &height, &channels, STBI_rgb_alpha);
+
+    if (!pixels) {
+        spdlog::error("failed to load texture {}", paths[0]);
+        return nullptr;
+    }
+    stbi_image_free(pixels);
+    pixels = nullptr;
+    // create buffer
+    const int single_size = width * height * 4;
+    VkDeviceSize texture_size = width * height * 4 * paths.size();
+    auto buffer = createBuffer(texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    buffer->map(texture_size);
+    int i = 0;
+    for (const auto &path : paths) {
+        pixels =
+            stbi_load(path.data(), &width, &height, &channels, STBI_rgb_alpha);
+        memcpy((uint8_t *)buffer->data + i * single_size, pixels,
+               static_cast<size_t>(texture_size));
+        stbi_image_free(pixels);
+        pixels = nullptr;
+        i++;
+    }
+    buffer->unmap();
+
+    auto ret = std::make_unique<Texture>(*this);
+
+    internalCreateImage(
+        width, height, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
+
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    ret->copyFrom(buffer->buffer, {width, height}, paths.size());
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    buffer.reset();
+
+    ret->initArray(paths.size(), VK_FORMAT_R8G8B8A8_SRGB);
+    return ret;
+}
 } // namespace cg::engine::backend

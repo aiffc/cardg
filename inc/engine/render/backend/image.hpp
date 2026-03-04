@@ -33,8 +33,11 @@ struct Texture {
     ~Texture();
 
     bool init(VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
+    bool initArray(uint32_t layer_count,
+                   VkFormat format = VK_FORMAT_R8G8B8A8_SRGB);
 
     void copyFrom(VkBuffer &buffer, glm::ivec2 size);
+    void copyFrom(VkBuffer &buffer, glm::ivec2 size, uint32_t layer_count);
 
   private:
     Device &main_device;

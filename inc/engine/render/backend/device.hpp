@@ -152,6 +152,8 @@ class Device {
     }
 
     std::unique_ptr<Texture> createTexture(std::string_view path);
+    std::unique_ptr<Texture>
+    createTextureArray(const std::vector<std::string_view> &paths);
 
     void waitIdle() { vkDeviceWaitIdle(m_device); }
 
