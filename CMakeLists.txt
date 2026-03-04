@@ -33,6 +33,7 @@ set(SOURCE_FILES
   src/engine/render/backend/layout.cpp
   src/engine/render/backend/descriptor.cpp
   src/engine/render/backend/graphics_pipeline.cpp
+  src/engine/render/backend/manager.cpp
   src/engine/render/renderer.cpp
   src/engine/input/manager.cpp
   src/engine/scene/scene.cpp

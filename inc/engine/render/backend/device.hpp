@@ -31,6 +31,7 @@ struct SyncObjs {
 class Device {
     friend class cg::engine::Renderer;
     friend class Swapchain;
+    friend class RendererManager;
 
   private:
     VkSurfaceKHR &m_surface;

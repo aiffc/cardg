@@ -13,6 +13,7 @@ class Device;
 class Swapchain;
 struct Buffer;
 class GraphicsPipeline;
+class RendererManager;
 } // namespace cg::engine::backend
 
 namespace cg::engine {
@@ -36,6 +37,7 @@ class Renderer final {
     VkSurfaceKHR m_surface;
     std::unique_ptr<cg::engine::backend::Device> m_device;
     std::unique_ptr<cg::engine::backend::Swapchain> m_swapchain;
+    std::unique_ptr<cg::engine::backend::RendererManager> m_manager;
 
   private:
     // internal function for sdl
@@ -47,19 +49,9 @@ class Renderer final {
   public:
     bool begin(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
     bool end();
-    void setViewport(float w = 0.0f, float h = 0.0f, float x = 0.0f,
-                     float y = 0.0f, float min = 0.0f, float max = 1.0f);
-    void setScissor(uint32_t w = 0, uint32_t h = 0, int32_t x = 0,
-                    int32_t y = 0);
-    void bindPipeline(cg::engine::backend::GraphicsPipeline &pipeline);
-    void bindVertex(cg::engine::backend::Buffer &buffer);
-    void draw(uint32_t count);
-    void bindIndex(cg::engine::backend::Buffer &buffer);
-    void drawIndex(uint32_t count);
-    void bindDescriptorSet(const VkDescriptorSet &set,
-                           const VkPipelineLayout &layout);
-    void pushConstant(VkPipelineLayout &layout, VkShaderStageFlags stage,
-                      uint32_t offset, uint32_t size, void *data);
+
+  public:
+    void drawBase();
 
   public:
     Renderer(const glm::ivec2 &size);
@@ -68,6 +60,8 @@ class Renderer final {
     [[nodiscard]] bool
     init(VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_1_BIT);
     void quit();
+
+    cg::engine::backend::RendererManager &operator*() { return *m_manager; }
 
     Renderer(Renderer &) = delete;
     Renderer(Renderer &&) = delete;

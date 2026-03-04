@@ -2,11 +2,13 @@
 #include "../../../inc/engine/render/backend/buffer.hpp"
 #include "../../../inc/engine/render/backend/device.hpp"
 #include "../../../inc/engine/render/backend/graphics_pipeline.hpp"
+#include "../../../inc/engine/render/backend/manager.hpp"
 #include "../../../inc/engine/render/backend/swapchain.hpp"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 #include <algorithm>
+#include <memory>
 #include <spdlog/spdlog.h>
 
 namespace cg::engine {
@@ -24,6 +26,7 @@ Renderer::~Renderer() { quit(); }
 void Renderer::updateWindowSize() {
     SDL_GetWindowSize(m_window.get(), &m_window_size.x, &m_window_size.y);
     m_device->updateWindowSize();
+    m_manager->resize({m_window_size.x, m_window_size.y});
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -221,11 +224,24 @@ bool Renderer::init(VkSampleCountFlagBits sample_count [[maybe_unused]]) {
         spdlog::error("unable to create swapchain");
         return false;
     }
+
+    m_manager =
+        std::make_unique<cg::engine::backend::RendererManager>(*m_device);
+    if (!m_manager->init(m_window_size)) {
+        spdlog::error("unable to init manager");
+        return false;
+    }
     spdlog::info("app init done");
     return true;
 }
 
 void Renderer::quit() {
+    if (m_manager) {
+        if (m_device) {
+            m_device->waitIdle();
+        }
+        m_manager.reset();
+    }
     if (m_swapchain) {
         if (m_device) {
             m_device->waitIdle();
@@ -414,85 +430,6 @@ bool Renderer::end() {
     return true;
 };
 
-void Renderer::setViewport(float w, float h, float x, float y, float min,
-                           float max) {
-    VkViewport v{
-        .x = x,
-        .y = y,
-        .width = w,
-        .height = h,
-        .minDepth = min,
-        .maxDepth = max,
-    };
-    if (w == 0.0f) {
-        v.width = static_cast<float>(m_window_size.x);
-    }
-    if (h == 0.0f) {
-        v.height = static_cast<float>(m_window_size.y);
-    }
-    vkCmdSetViewport(m_device->cmd(), 0, 1, &v);
-}
-
-void Renderer::setScissor(uint32_t w, uint32_t h, int32_t x, int32_t y) {
-    VkRect2D v{
-        .offset =
-            {
-                .x = x,
-                .y = y,
-            },
-        .extent =
-            {
-                .width = w,
-                .height = h,
-
-            },
-
-    };
-    if (w == 0) {
-        v.extent.width = m_window_size.x;
-    }
-    if (h == 0) {
-        v.extent.height = m_window_size.y;
-    }
-    vkCmdSetScissor(m_device->cmd(), 0, 1, &v);
-}
-
-void Renderer::bindPipeline(cg::engine::backend::GraphicsPipeline &pipeline) {
-    if (*pipeline != VK_NULL_HANDLE) {
-        vkCmdBindPipeline(m_device->cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          *pipeline);
-    }
-}
-
-void Renderer::bindVertex(cg::engine::backend::Buffer &buffer) {
-    VkBuffer buffers = buffer.buffer;
-    VkDeviceSize offsets = 0;
-    vkCmdBindVertexBuffers(m_device->cmd(), 0, 1, &buffers, &offsets);
-}
-
-void Renderer::draw(uint32_t count) {
-    vkCmdDraw(m_device->cmd(), count, 1, 0, 0); // TODO test for now
-}
-
-void Renderer::bindIndex(cg::engine::backend::Buffer &buffer) {
-    // use 32
-    vkCmdBindIndexBuffer(m_device->cmd(), buffer.buffer, 0,
-                         VK_INDEX_TYPE_UINT32);
-}
-
-void Renderer::drawIndex(uint32_t count) {
-    vkCmdDrawIndexed(m_device->cmd(), count, 1, 0, 0, 0);
-}
-
-void Renderer::bindDescriptorSet(const VkDescriptorSet &set,
-                                 const VkPipelineLayout &layout) {
-    vkCmdBindDescriptorSets(m_device->cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            layout, 0, 1, &set, 0, nullptr);
-}
-
-void Renderer::pushConstant(VkPipelineLayout &layout, VkShaderStageFlags stage,
-                            uint32_t offset, uint32_t size, void *data) {
-    vkCmdPushConstants(m_device->cmd(), layout, stage, offset, size, data);
-}
+void Renderer::drawBase() { m_manager->drawBase(); }
 
 } // namespace cg::engine

@@ -81,8 +81,8 @@ void App::deinit() {
 }
 
 bool App::render() {
-    if (m_renderer->begin(1.0)) {
-        // m_scene_manager->render();
+    if (m_renderer->begin()) {
+        m_scene_manager->render();
         m_renderer->end();
     }
 
