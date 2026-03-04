@@ -66,9 +66,9 @@ bool Renderer::initInstance() {
         return false;
     }
     // dump all supported layer
-    for (auto &support_layer : support_layers) {
-        spdlog::info("{}", support_layer.layerName);
-    }
+    // for (auto &support_layer : support_layers) {
+    //     spdlog::info("{}", support_layer.layerName);
+    // }
     std::vector<char const *> required_layers;
     if (m_debug) {
         required_layers.assign(validation_layers.begin(),
@@ -113,9 +113,9 @@ bool Renderer::initInstance() {
         return false;
     }
     // dump all supported extension
-    for (auto &support_extension : support_extensions) {
-        spdlog::info("{}", support_extension.extensionName);
-    }
+    // for (auto &support_extension : support_extensions) {
+    //     spdlog::info("{}", support_extension.extensionName);
+    // }
     // check all required extension support
     for (const auto &extension : required_extensions) {
         if (std::ranges::none_of(
@@ -431,5 +431,6 @@ bool Renderer::end() {
 };
 
 void Renderer::drawBase() { m_manager->drawBase(); }
+void Renderer::drawBaseTexture() { m_manager->drawBaseTexture(); }
 
 } // namespace cg::engine

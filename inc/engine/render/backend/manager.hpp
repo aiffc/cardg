@@ -7,6 +7,7 @@
 #include "layout.hpp"
 #include <glm/glm.hpp>
 #include <memory>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -15,6 +16,11 @@ namespace cg::engine::buffer {
 struct Base {
     glm::vec2 pos;
     glm::vec3 color;
+};
+
+struct BaseTexture {
+    glm::vec2 pos;
+    glm::vec2 coord;
 };
 
 } // namespace cg::engine::buffer
@@ -30,6 +36,7 @@ struct ManagerHashContainer {
     std::unique_ptr<Buffer> vbuffers;
     std::unique_ptr<Buffer> ibuffers;
     std::unique_ptr<Buffer> uniforms;
+    std::unique_ptr<Texture> texture;
     ManagerHashContainer();
     ~ManagerHashContainer();
 };
@@ -44,9 +51,13 @@ class RendererManager final {
         m_container;
 
   private:
-    void drawBase();
+    [[nodiscard]] bool initBasePipeline(const glm::vec2 &size);
+    [[nodiscard]] bool initBaseTexturePipeline(const glm::vec2 &size);
     [[nodiscard]] bool init(const glm::vec2 &size);
     void resize(const glm::vec2 &v) { m_window_size = v; }
+
+    void drawBase();
+    void drawBaseTexture();
 
   private:
     void setViewport(float w = 0.0f, float h = 0.0f, float x = 0.0f,
@@ -70,6 +81,11 @@ class RendererManager final {
     void addBasePipelineVertexBuffer(
         const std::vector<cg::engine::buffer::Base> &data);
     void addBasePipelineIndexBuffer(const std::vector<uint32_t> &data);
+
+    void addBaseTexturePipelineVertexBuffer(
+        const std::vector<cg::engine::buffer::BaseTexture> &data);
+    void addBaseTexturePipelineIndexBuffer(const std::vector<uint32_t> &data);
+    void addBaseTextureTexture(std::string_view path);
 
     RendererManager(RendererManager &) = delete;
     RendererManager(RendererManager &&) = delete;

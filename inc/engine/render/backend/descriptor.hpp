@@ -39,6 +39,7 @@ class Descriptor {
 
     void maxSet(uint32_t v) { m_max_set = v; }
     uint32_t maxSet() const { return m_max_set; }
+
     Descriptor(Descriptor &) = delete;
     Descriptor(Descriptor &&) = delete;
     Descriptor &operator=(Descriptor &) = delete;

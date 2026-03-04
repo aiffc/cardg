@@ -17,45 +17,6 @@ std::unique_ptr<cg::engine::App> app;
 SDL_AppResult SDL_AppInit(void **appstate [[maybe_unused]],
                           int argc [[maybe_unused]],
                           char **argv [[maybe_unused]]) {
-
-    auto player = std::make_unique<cg::Character>();
-    auto monster = std::make_unique<cg::Character>();
-
-    player->addCard2Heap(cg::makeAlchemyThrowPoison());
-    player->addCard2Heap(cg::makeArcherRoughShoot());
-    player->addCard2Heap(cg::makeAssassinStabbed());
-    player->addCard2Heap(cg::makeCommonBlank());
-    player->addCard2Heap(cg::makeHunterSummonDog());
-    player->addCard2Heap(cg::makePriestCure());
-
-    player->draw();
-    player->draw();
-    player->draw();
-    player->draw();
-    player->draw();
-    player->draw();
-    player->showHeap();
-    player->showHand();
-    player->showRecycleBin();
-    spdlog::info("--------------------------------");
-    player->select(1);
-    player->useSelect(monster.get());
-    player->select(1);
-    player->useSelect(monster.get());
-    player->select(1);
-    player->useSelect(monster.get());
-    player->showHeap();
-    player->showHand();
-    player->showRecycleBin();
-    spdlog::info("--------------------------------");
-    player->draw();
-    player->draw();
-    player->draw();
-    player->draw();
-    player->showHeap();
-    player->showHand();
-    player->showRecycleBin();
-
     app = std::make_unique<cg::engine::App>();
     if (!app->init()) {
         return SDL_APP_FAILURE;

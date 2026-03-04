@@ -2,6 +2,7 @@
 #include "../../../../inc/engine/render/backend/device.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan_core.h>
 
@@ -14,12 +15,13 @@ RendererManager::RendererManager(Device &device) : m_device(device) {}
 
 RendererManager::~RendererManager() = default;
 
-bool RendererManager::init(const glm::vec2 &size) {
-    m_window_size = size;
-
+bool RendererManager::initBasePipeline(const glm::vec2 &size) {
     auto base = std::make_unique<ManagerHashContainer>();
     base->layout = std::make_unique<Layout>(m_device);
-    base->layout->init();
+    if (!base->layout->init()) {
+        spdlog::error("failed to create pipeline layout");
+        return false;
+    }
     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
                               "../shaders/base/vert.spv");
@@ -38,6 +40,56 @@ bool RendererManager::init(const glm::vec2 &size) {
         return false;
     }
     m_container.emplace("base pipeline", std::move(base));
+    return true;
+}
+
+bool RendererManager::initBaseTexturePipeline(const glm::vec2 &size) {
+    auto base = std::make_unique<ManagerHashContainer>();
+
+    base->descriptor = std::make_unique<Descriptor>(m_device);
+    base->descriptor->addDescriptorBinding(
+        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        VK_SHADER_STAGE_FRAGMENT_BIT);
+    if (!base->descriptor->init()) {
+        spdlog::error("failed to create descriptor things");
+        return false;
+    }
+    base->layout = std::make_unique<Layout>(m_device);
+    if (!base->layout->init({**base->descriptor})) {
+        spdlog::error("failed to create pipeline layout");
+        return false;
+    }
+    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+                              "../shaders/texture/vert.spv");
+    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+                              "../shaders/texture/frag.spv");
+    base->pipeline->addViewport(size.x, size.y);
+    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+    base->pipeline->addColorBlendAttachemt();
+    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
+    base->pipeline->addAttribute(
+        0, 0, VK_FORMAT_R32G32_SFLOAT,
+        offsetof(cg::engine::buffer::BaseTexture, pos));
+    base->pipeline->addAttribute(
+        1, 0, VK_FORMAT_R32G32_SFLOAT,
+        offsetof(cg::engine::buffer::BaseTexture, coord));
+    if (!base->pipeline->init(**base->layout)) {
+        spdlog::error("failed to create base pipeline");
+        return false;
+    }
+    m_container.emplace("base texture pipeline", std::move(base));
+    return true;
+}
+
+bool RendererManager::init(const glm::vec2 &size) {
+    m_window_size = size;
+    if (!initBasePipeline(size)) {
+        return false;
+    }
+    if (!initBaseTexturePipeline(size)) {
+        return false;
+    }
     return true;
 }
 
@@ -67,6 +119,60 @@ void RendererManager::addBasePipelineIndexBuffer(
             it->second->ibuffers = std::move(buff);
         } else {
             spdlog::warn("failed to create index buffer for base pipeline");
+        }
+
+    } else {
+        spdlog::warn("base pipeline not found");
+    }
+}
+
+void RendererManager::addBaseTexturePipelineVertexBuffer(
+    const std::vector<cg::engine::buffer::BaseTexture> &data) {
+    auto it = m_container.find("base texture pipeline");
+    if (it != m_container.end()) {
+        auto buff = m_device.createUsageBuffer<cg::engine::buffer::BaseTexture>(
+            data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+        if (buff) {
+            it->second->vbuffers = std::move(buff);
+        } else {
+            spdlog::warn("failed to create vertex buffer for texture pipeline");
+        }
+
+    } else {
+        spdlog::warn("base pipeline not found");
+    }
+}
+
+void RendererManager::addBaseTexturePipelineIndexBuffer(
+    const std::vector<uint32_t> &data) {
+    auto it = m_container.find("base texture pipeline");
+    if (it != m_container.end()) {
+        auto buff = m_device.createUsageBuffer<uint32_t>(
+            data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+        if (buff) {
+            it->second->ibuffers = std::move(buff);
+        } else {
+            spdlog::warn("failed to create index buffer for texture pipeline");
+        }
+
+    } else {
+        spdlog::warn("base pipeline not found");
+    }
+}
+
+void RendererManager::addBaseTextureTexture(std::string_view path) {
+    auto it = m_container.find("base texture pipeline");
+    if (it != m_container.end()) {
+        auto texture = m_device.createTexture(path);
+        if (texture) {
+            if (it->second->descriptor) {
+                it->second->descriptor->updateTexture(*texture, 0, 0);
+                it->second->texture = std::move(texture);
+            } else {
+                spdlog::warn("no descriptor in texture pipeline");
+            }
+        } else {
+            spdlog::warn("failed to create texture for texture pipeline");
         }
 
     } else {
@@ -172,6 +278,7 @@ void RendererManager::drawBase() {
         if (vertex_buffer) {
             bindVertex(*vertex_buffer);
             if (index_buffer) {
+                bindIndex(*index_buffer);
                 drawIndex(index_buffer->size);
             } else {
                 draw(vertex_buffer->size);
@@ -182,4 +289,33 @@ void RendererManager::drawBase() {
     }
 }
 
+void RendererManager::drawBaseTexture() {
+    auto it = m_container.find("base texture pipeline");
+    if (it != m_container.end()) {
+        auto &pipeline = it->second->pipeline;
+        if (**pipeline != VK_NULL_HANDLE) {
+            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              **pipeline);
+        }
+        setViewport();
+        setScissor();
+        if (it->second->descriptor) {
+            bindDescriptorSet(it->second->descriptor->set(),
+                              **it->second->layout);
+        }
+        auto &vertex_buffer = it->second->vbuffers;
+        auto &index_buffer = it->second->ibuffers;
+        if (vertex_buffer) {
+            bindVertex(*vertex_buffer);
+            if (index_buffer) {
+                bindIndex(*index_buffer);
+                drawIndex(index_buffer->size);
+            } else {
+                draw(vertex_buffer->size);
+            }
+        }
+    } else {
+        spdlog::warn("base texture pipeline not found");
+    }
+}
 } // namespace cg::engine::backend

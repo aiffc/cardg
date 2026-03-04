@@ -133,7 +133,7 @@ class Device {
         if (ret) {
             ret->cutFrom(*stage, total_size);
             stage.reset();
-            ret->size = sizeof(T);
+            ret->size = datas.size();
         }
         return ret;
     }

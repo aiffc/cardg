@@ -282,9 +282,9 @@ bool Device::initLogicDevice() {
     }
 
     // dump all supported extension
-    for (const auto &support_extension : support_extensions) {
-        spdlog::info("{}", support_extension.extensionName);
-    }
+    // for (const auto &support_extension : support_extensions) {
+    //     spdlog::info("{}", support_extension.extensionName);
+    // }
 
     std::vector<const char *> required_layers;
     if (m_debug) {

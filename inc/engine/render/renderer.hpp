@@ -52,6 +52,7 @@ class Renderer final {
 
   public:
     void drawBase();
+    void drawBaseTexture();
 
   public:
     Renderer(const glm::ivec2 &size);
