@@ -44,13 +44,39 @@ struct ManagerHashContainer {
     ~ManagerHashContainer();
 };
 
+enum class PipelineType {
+    Base,
+    BaseTexture,
+    BaseTextureArray,
+};
+
+static inline std::string dumpPipelineName(const PipelineType &p) {
+    switch (p) {
+    case PipelineType::Base:
+        return "Base";
+    case PipelineType::BaseTexture:
+        return "Base Texture";
+    case PipelineType::BaseTextureArray:
+        return "Base Texture Array";
+    default:;
+        return "unknow";
+    }
+}
+
+struct ManagerHashFun {
+    template <typename T> size_t operator()(const T &t) const {
+        return static_cast<size_t>(t);
+    }
+};
+
 class RendererManager final {
     friend class cg::engine::Renderer;
 
   private:
     Device &m_device;
     glm::vec2 m_window_size;
-    std::unordered_map<std::string, std::unique_ptr<ManagerHashContainer>>
+    std::unordered_map<PipelineType, std::unique_ptr<ManagerHashContainer>,
+                       ManagerHashFun>
         m_container;
 
   private:
@@ -83,22 +109,49 @@ class RendererManager final {
     RendererManager(Device &device);
     ~RendererManager();
 
-    void addBasePipelineVertexBuffer(
-        const std::vector<cg::engine::buffer::Base> &data);
-    void addBasePipelineIndexBuffer(const std::vector<uint32_t> &data);
+    template <typename T>
+    void addVertexBuffer(const PipelineType &pipeline_name,
+                         const std::vector<T> &data) {
+        auto it = m_container.find(pipeline_name);
+        if (it != m_container.end()) {
+            auto buff = m_device.createUsageBuffer<T>(
+                data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+            if (buff) {
+                it->second->vbuffers = std::move(buff);
+            } else {
+                spdlog::warn("failed to create vertex buffer for {}",
+                             dumpPipelineName(pipeline_name));
+            }
 
-    void addBaseTexturePipelineVertexBuffer(
-        const std::vector<cg::engine::buffer::BaseTexture> &data);
-    void addBaseTexturePipelineIndexBuffer(const std::vector<uint32_t> &data);
-    void addBaseTextureTexture(std::string_view path);
+        } else {
+            spdlog::warn("pipeline {} not found",
+                         dumpPipelineName(pipeline_name));
+        }
+    }
+    void addIndexBuffer(const PipelineType &pipeline_name,
+                        const std::vector<uint32_t> &data);
+    void addTexture(const PipelineType &pipeline_name,
+                    std::string_view texture_path);
+    void addTextureArray(const PipelineType &pipeline_name,
+                         const std::vector<std::string_view> &texture_paths);
+    template <typename T>
+    void mapUniform(const PipelineType &pipeline_name, const T &data) {
+        auto it = m_container.find(pipeline_name);
+        if (it != m_container.end()) {
+            auto &buffer = it->second->uniforms;
+            if (buffer) {
+                memcpy(buffer->data, &data,
+                       sizeof(cg::engine::buffer::BaseTextureArrayU));
+            } else {
+                spdlog::warn("failed to map uniform buffer for pipeline {}",
+                             dumpPipelineName(pipeline_name));
+            }
 
-    void addBaseTextureArrayPipelineVertexBuffer(
-        const std::vector<cg::engine::buffer::BaseTexture> &data);
-    void
-    addBaseTextureArrayPipelineIndexBuffer(const std::vector<uint32_t> &data);
-    void addBaseTextureArrayTexture(const std::vector<std::string_view> &path);
-    void
-    mapBaseTextureArrayUniform(cg::engine::buffer::BaseTextureArrayU &index);
+        } else {
+            spdlog::warn("pipeline {} not found",
+                         dumpPipelineName(pipeline_name));
+        }
+    }
 
     RendererManager(RendererManager &) = delete;
     RendererManager(RendererManager &&) = delete;

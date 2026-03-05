@@ -40,7 +40,7 @@ bool RendererManager::initBasePipeline(const glm::vec2 &size) {
         spdlog::error("failed to create base pipeline");
         return false;
     }
-    m_container.emplace("base pipeline", std::move(base));
+    m_container.emplace(PipelineType::Base, std::move(base));
     return true;
 }
 
@@ -79,7 +79,7 @@ bool RendererManager::initBaseTexturePipeline(const glm::vec2 &size) {
         spdlog::error("failed to create base pipeline");
         return false;
     }
-    m_container.emplace("base texture pipeline", std::move(base));
+    m_container.emplace(PipelineType::BaseTexture, std::move(base));
     return true;
 }
 
@@ -125,7 +125,7 @@ bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
         m_device.createUniformBuffer<cg::engine::buffer::BaseTextureArrayU>();
     base->descriptor->updateBuffer(*base->uniforms, 1, 0,
                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    m_container.emplace("base texture array pipeline", std::move(base));
+    m_container.emplace(PipelineType::BaseTextureArray, std::move(base));
     return true;
 }
 bool RendererManager::init(const glm::vec2 &size) {
@@ -142,158 +142,62 @@ bool RendererManager::init(const glm::vec2 &size) {
     return true;
 }
 
-void RendererManager::addBasePipelineVertexBuffer(
-    const std::vector<cg::engine::buffer::Base> &data) {
-    auto it = m_container.find("base pipeline");
-    if (it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<cg::engine::buffer::Base>(
-            data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-        if (buff) {
-            it->second->vbuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create vertex buffer for base pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-void RendererManager::addBasePipelineIndexBuffer(
-    const std::vector<uint32_t> &data) {
-    auto it = m_container.find("base pipeline");
+void RendererManager::addIndexBuffer(const PipelineType &pipeline_name,
+                                     const std::vector<uint32_t> &data) {
+    auto it = m_container.find(pipeline_name);
     if (it != m_container.end()) {
         auto buff = m_device.createUsageBuffer<uint32_t>(
             data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         if (buff) {
             it->second->ibuffers = std::move(buff);
         } else {
-            spdlog::warn("failed to create index buffer for base pipeline");
+            spdlog::warn("failed to create index buffer for {}",
+                         dumpPipelineName(pipeline_name));
         }
 
     } else {
-        spdlog::warn("base pipeline not found");
+        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
     }
 }
 
-void RendererManager::addBaseTexturePipelineVertexBuffer(
-    const std::vector<cg::engine::buffer::BaseTexture> &data) {
-    auto it = m_container.find("base texture pipeline");
+void RendererManager::addTexture(const PipelineType &pipeline_name,
+                                 std::string_view texture_path) {
+    auto it = m_container.find(pipeline_name);
     if (it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<cg::engine::buffer::BaseTexture>(
-            data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-        if (buff) {
-            it->second->vbuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create vertex buffer for texture pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-
-void RendererManager::addBaseTexturePipelineIndexBuffer(
-    const std::vector<uint32_t> &data) {
-    auto it = m_container.find("base texture pipeline");
-    if (it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<uint32_t>(
-            data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-        if (buff) {
-            it->second->ibuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create index buffer for texture pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-
-void RendererManager::addBaseTextureTexture(std::string_view path) {
-    auto it = m_container.find("base texture pipeline");
-    if (it != m_container.end()) {
-        auto texture = m_device.createTexture(path);
+        auto texture = m_device.createTexture(texture_path);
         if (texture) {
             if (it->second->descriptor) {
                 it->second->descriptor->updateTexture(*texture, 0, 0);
                 it->second->texture = std::move(texture);
             } else {
-                spdlog::warn("no descriptor in texture pipeline");
+                spdlog::warn("no descriptor in pipeline {}",
+                             dumpPipelineName(pipeline_name));
             }
         } else {
-            spdlog::warn("failed to create texture for texture pipeline");
+            spdlog::warn("failed to create texture for pipeline {}",
+                         dumpPipelineName(pipeline_name));
         }
 
     } else {
-        spdlog::warn("base pipeline not found");
+        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
     }
 }
 
-void RendererManager::addBaseTextureArrayPipelineVertexBuffer(
-    const std::vector<cg::engine::buffer::BaseTexture> &data) {
-    auto it = m_container.find("base texture array pipeline");
+void RendererManager::addTextureArray(
+    const PipelineType &pipeline_name,
+    const std::vector<std::string_view> &texture_paths) {
+    auto it = m_container.find(pipeline_name);
     if (it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<cg::engine::buffer::BaseTexture>(
-            data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-        if (buff) {
-            it->second->vbuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create vertex buffer for base pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-
-void RendererManager::addBaseTextureArrayPipelineIndexBuffer(
-    const std::vector<uint32_t> &data) {
-    auto it = m_container.find("base texture array pipeline");
-    if (it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<uint32_t>(
-            data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-        if (buff) {
-            it->second->ibuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create index buffer for base pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-
-void RendererManager::addBaseTextureArrayTexture(
-    const std::vector<std::string_view> &path) {
-    auto it = m_container.find("base texture array pipeline");
-    if (it != m_container.end()) {
-        auto texture = m_device.createTextureArray(path);
+        auto texture = m_device.createTextureArray(texture_paths);
         if (texture) {
             it->second->descriptor->updateTexture(*texture, 0, 0);
             it->second->texture = std::move(texture);
         } else {
-            spdlog::warn("failed to create index buffer for base pipeline");
+            spdlog::warn("failed to create texture array for pipeline {}",
+                         dumpPipelineName(pipeline_name));
         }
-
     } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
-
-void RendererManager::mapBaseTextureArrayUniform(
-    cg::engine::buffer::BaseTextureArrayU &index) {
-    auto it = m_container.find("base texture array pipeline");
-    if (it != m_container.end()) {
-        auto &buffer = it->second->uniforms;
-        if (buffer) {
-            memcpy(buffer->data, &index,
-                   sizeof(cg::engine::buffer::BaseTextureArrayU));
-        } else {
-            spdlog::warn("failed to create index buffer for base pipeline");
-        }
-
-    } else {
-        spdlog::warn("base pipeline not found");
+        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
     }
 }
 
@@ -381,7 +285,7 @@ void RendererManager::pushConstant(VkPipelineLayout &layout,
 }
 
 void RendererManager::drawBase() {
-    auto it = m_container.find("base pipeline");
+    auto it = m_container.find(PipelineType::Base);
     if (it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
@@ -407,7 +311,7 @@ void RendererManager::drawBase() {
 }
 
 void RendererManager::drawBaseTexture() {
-    auto it = m_container.find("base texture pipeline");
+    auto it = m_container.find(PipelineType::BaseTexture);
     if (it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
@@ -437,7 +341,7 @@ void RendererManager::drawBaseTexture() {
 }
 
 void RendererManager::drawBaseTextureArray() {
-    auto it = m_container.find("base texture array pipeline");
+    auto it = m_container.find(PipelineType::BaseTextureArray);
     if (it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
@@ -465,4 +369,5 @@ void RendererManager::drawBaseTextureArray() {
         spdlog::warn("base texture pipeline not found");
     }
 }
+
 } // namespace cg::engine::backend

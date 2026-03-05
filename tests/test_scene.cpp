@@ -24,17 +24,23 @@ void TestScene::init(cg::engine::Context &context) {
         {{0.5f, 0.5f}, {1.0f, 1.0f}},
         {{-0.5f, 0.5f}, {0.0f, 1.0f}},
     };
-    (*context.renderer).addBaseTextureArrayPipelineVertexBuffer(vertices);
-    std::vector<uint32_t> indexs{0, 1, 2, 2, 3, 0};
-    (*context.renderer).addBaseTextureArrayPipelineIndexBuffer(indexs);
     (*context.renderer)
-        .addBaseTextureArrayTexture(
-            {"../asset/test.png", "../asset/test2.png"});
+        .addVertexBuffer<cg::engine::buffer::BaseTexture>(
+            cg::engine::backend::PipelineType::BaseTextureArray, vertices);
+    std::vector<uint32_t> indexs{0, 1, 2, 2, 3, 0};
+    (*context.renderer)
+        .addIndexBuffer(cg::engine::backend::PipelineType::BaseTextureArray,
+                        indexs);
+    (*context.renderer)
+        .addTextureArray(cg::engine::backend::PipelineType::BaseTextureArray,
+                         {"../asset/test.png", "../asset/test2.png"});
 }
 
 void TestScene::update(float dt [[maybe_unused]],
                        cg::engine::Context &context [[maybe_unused]]) {
-    (*context.renderer).mapBaseTextureArrayUniform(globleV);
+    (*context.renderer)
+        .mapUniform<cg::engine::buffer::BaseTextureArrayU>(
+            cg::engine::backend::PipelineType::BaseTextureArray, globleV);
 }
 
 void TestScene::render(cg::engine::Context &context [[maybe_unused]]) {
