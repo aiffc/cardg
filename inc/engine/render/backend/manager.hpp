@@ -142,6 +142,7 @@ class RendererManager final {
             if (buffer) {
                 memcpy(buffer->data, &data,
                        sizeof(cg::engine::buffer::BaseTextureArrayU));
+                buffer->flushMapped();
             } else {
                 spdlog::warn("failed to map uniform buffer for pipeline {}",
                              dumpPipelineName(pipeline_name));

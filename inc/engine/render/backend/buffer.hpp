@@ -18,6 +18,7 @@ struct Buffer {
     void bind(VkDeviceSize offset = 0);
     void *map(VkDeviceSize size, VkDeviceSize offset = 0);
     void unmap();
+    void flushMapped();
     void copyFrom(const Buffer &src, VkDeviceSize size);
     void cutFrom(Buffer &src, VkDeviceSize size);
 

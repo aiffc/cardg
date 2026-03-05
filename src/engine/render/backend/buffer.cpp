@@ -41,6 +41,19 @@ void Buffer::unmap() {
     }
 }
 
+void Buffer::flushMapped() {
+    if (memory != VK_NULL_HANDLE) {
+        VkMappedMemoryRange range{
+            .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+            .pNext = nullptr,
+            .memory = memory,
+            .offset = 0,
+            .size = VK_WHOLE_SIZE,
+        };
+        vkFlushMappedMemoryRanges(*device, 1, &range);
+    }
+}
+
 void Buffer::copyFrom(const Buffer &src, VkDeviceSize size) {
     if (src.buffer == VK_NULL_HANDLE || src.memory == VK_NULL_HANDLE) {
         spdlog::warn("copy invalid buffer");

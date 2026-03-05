@@ -24,8 +24,16 @@ Renderer::Renderer(const glm::ivec2 &size) : m_window_size(size) {
 Renderer::~Renderer() { quit(); }
 
 void Renderer::updateWindowSize() {
-    SDL_GetWindowSize(m_window.get(), &m_window_size.x, &m_window_size.y);
     m_device->updateWindowSize();
+    SDL_GetWindowSize(m_window.get(), &m_window_size.x, &m_window_size.y);
+    m_window_size.x =
+        std::clamp((uint32_t)m_window_size.x,
+                   m_device->m_phy_info.capabilities.maxImageExtent.width,
+                   m_device->m_phy_info.capabilities.minImageExtent.width);
+    m_window_size.y =
+        std::clamp((uint32_t)m_window_size.y,
+                   m_device->m_phy_info.capabilities.maxImageExtent.height,
+                   m_device->m_phy_info.capabilities.minImageExtent.height);
     m_manager->resize({m_window_size.x, m_window_size.y});
 }
 
