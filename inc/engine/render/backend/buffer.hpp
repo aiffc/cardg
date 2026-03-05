@@ -11,6 +11,7 @@ struct Buffer {
     VkDeviceMemory memory = VK_NULL_HANDLE;
     void *data = nullptr; // mapped data
     VkDeviceSize size;
+    size_t aligment = 0; // for dynamic uniform buffer
 
     Buffer(Device &d);
     ~Buffer();

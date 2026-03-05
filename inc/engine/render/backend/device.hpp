@@ -59,6 +59,17 @@ class Device {
     VkCommandBuffer &cmd() { return m_cmd; }
     void updateWindowSize();
 
+    template <typename T> size_t calcDynamicUniformAligment() {
+        size_t min_aligment =
+            m_phy_info.properties.limits.minUniformBufferOffsetAlignment;
+        size_t aligment_size = sizeof(T);
+        if (min_aligment > 0) {
+            aligment_size =
+                (aligment_size + min_aligment - 1) & ~(min_aligment - 1);
+        }
+        return min_aligment;
+    }
+
   private:
     uint32_t findMemoryType(uint32_t type_filter,
                             VkMemoryPropertyFlags properties);
@@ -152,6 +163,46 @@ class Device {
         }
         return ret;
     }
+
+    template <typename T>
+    std::unique_ptr<Buffer> createDynamicUniformBuffer(uint32_t count = 1) {
+        size_t aligment = calcDynamicUniformAligment<T>();
+        VkDeviceSize size = aligment * count;
+        auto ret = createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if (ret) {
+            ret->map(size);
+            ret->size = size;
+            if (count > 1) {
+                ret->aligment = aligment;
+            }
+        }
+        return ret;
+    }
+
+    // template <typename DynamicT, typename NormalT>
+    // std::unique_ptr<Buffer> createMixUniformBuffer(uint32_t count = 1) {
+    //     size_t dynamic_aligment = calcDynamicUniformAligment<DynamicT>();
+    //     VkDeviceSize size = dynamic_aligment * count;
+
+    //     size_t normal_aligment = calcDynamicUniformAligment<NormalT>();
+    //     size += normal_aligment;
+
+    //     auto ret = createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    //                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+    //                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    //     if (ret) {
+    //         ret->map(size);
+    //         ret->size = size;
+    //         if (count > 1) {
+    //             ret->aligment = aligment;
+    //         }
+    //     }
+    //     return ret;
+    // }
 
     std::unique_ptr<Texture> createTexture(std::string_view path);
     std::unique_ptr<Texture>

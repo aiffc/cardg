@@ -30,7 +30,8 @@ class Descriptor {
                          uint32_t count = 1,
                          const VkSampler *sampler = nullptr);
     void updateBuffer(const Buffer &buffer, uint32_t dst_binding,
-                      uint32_t dst_array_element, VkDescriptorType type);
+                      uint32_t dst_array_element, VkDescriptorType type,
+                      size_t offset = 0);
     void updateTexture(Texture &texture, uint32_t dst_binding,
                        uint32_t dst_array_element);
 

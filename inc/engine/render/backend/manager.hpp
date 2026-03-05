@@ -140,8 +140,27 @@ class RendererManager final {
         if (it != m_container.end()) {
             auto &buffer = it->second->uniforms;
             if (buffer) {
-                memcpy(buffer->data, &data,
-                       sizeof(cg::engine::buffer::BaseTextureArrayU));
+                memcpy(buffer->data, &data, sizeof(T));
+                buffer->flushMapped();
+            } else {
+                spdlog::warn("failed to map uniform buffer for pipeline {}",
+                             dumpPipelineName(pipeline_name));
+            }
+
+        } else {
+            spdlog::warn("pipeline {} not found",
+                         dumpPipelineName(pipeline_name));
+        }
+    }
+
+    template <typename T>
+    void mapDynamicUniform(const PipelineType &pipeline_name, const T *data,
+                           uint32_t size) {
+        auto it = m_container.find(pipeline_name);
+        if (it != m_container.end()) {
+            auto &buffer = it->second->uniforms;
+            if (buffer) {
+                memcpy(buffer->data, data, buffer->aligment * size);
                 buffer->flushMapped();
             } else {
                 spdlog::warn("failed to map uniform buffer for pipeline {}",

@@ -2,6 +2,7 @@
 #include "../../../../inc/engine/render/backend/buffer.hpp"
 #include "../../../../inc/engine/render/backend/device.hpp"
 #include "../../../../inc/engine/render/backend/image.hpp"
+#include <cstddef>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan_core.h>
 
@@ -92,11 +93,11 @@ bool Descriptor::init() {
 }
 
 void Descriptor::updateBuffer(const Buffer &buffer, uint32_t dst_binding,
-                              uint32_t dst_array_element,
-                              VkDescriptorType type) {
+                              uint32_t dst_array_element, VkDescriptorType type,
+                              size_t offset) {
     VkDescriptorBufferInfo buffer_info{
         .buffer = buffer.buffer,
-        .offset = 0,
+        .offset = offset,
         .range = buffer.size,
 
     };
