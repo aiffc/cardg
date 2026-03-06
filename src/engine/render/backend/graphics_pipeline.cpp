@@ -119,7 +119,7 @@ bool GraphicsPipeline::init(VkPipelineLayout &layout) {
 
     VkGraphicsPipelineCreateInfo info{
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .pNext = nullptr,
+        .pNext = &rendering_info,
         .flags = 0,
         .stageCount = static_cast<uint32_t>(m_shader_stages.size()),
         .pStages = m_shader_stages.data(),
@@ -138,9 +138,9 @@ bool GraphicsPipeline::init(VkPipelineLayout &layout) {
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0,
     };
-    if (m_device.sampleCount() != VK_SAMPLE_COUNT_1_BIT) {
-        info.pNext = &rendering_info;
-    }
+    // if (m_device.sampleCount() != VK_SAMPLE_COUNT_1_BIT) {
+    //     info.pNext = &rendering_info;
+    // }
     if (VK_SUCCESS != vkCreateGraphicsPipelines(*m_device, VK_NULL_HANDLE, 1,
                                                 &info, nullptr, &m_pipeline)) {
         spdlog::error("failed to create graphics pipeline");

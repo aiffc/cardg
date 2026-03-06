@@ -98,7 +98,7 @@ void Descriptor::updateBuffer(const Buffer &buffer, uint32_t dst_binding,
     VkDescriptorBufferInfo buffer_info{
         .buffer = buffer.buffer,
         .offset = offset,
-        .range = buffer.size,
+        .range = buffer.ranges,
 
     };
     VkWriteDescriptorSet write_info{

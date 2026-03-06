@@ -24,10 +24,15 @@ void SyncObjs::destroy(const VkDevice device) {
         vkDestroySemaphore(device, image_available, nullptr);
         image_available = VK_NULL_HANDLE;
     }
-    if (render_done != VK_NULL_HANDLE) {
-        vkDestroySemaphore(device, render_done, nullptr);
-        render_done = VK_NULL_HANDLE;
+
+    for (auto &render_done_semaphore : render_done) {
+        if (render_done_semaphore != VK_NULL_HANDLE) {
+            vkDestroySemaphore(device, render_done_semaphore, nullptr);
+            render_done_semaphore = VK_NULL_HANDLE;
+        }
     }
+    render_done.clear();
+
     if (in_flight_fence != VK_NULL_HANDLE) {
         vkDestroyFence(device, in_flight_fence, nullptr);
         in_flight_fence = VK_NULL_HANDLE;
@@ -409,14 +414,24 @@ bool Device::initSync() {
         .flags = VK_FENCE_CREATE_SIGNALED_BIT,
     };
 
+    // same as swapchain image count
+    uint32_t image_count = m_phy_info.capabilities.minImageCount + 1;
+    if (image_count > m_phy_info.capabilities.maxImageCount &&
+        m_phy_info.capabilities.maxImageCount > 0) {
+        image_count = m_phy_info.capabilities.maxImageCount;
+    }
+    m_sync.render_done.resize(image_count);
+    for (uint32_t i = 0; i < image_count; ++i) {
+
+        if (VK_SUCCESS != vkCreateSemaphore(m_device, &sinfo, nullptr,
+                                            &m_sync.render_done[i])) {
+            spdlog::error("failed to create semaphore for render done");
+            return false;
+        }
+    }
     if (VK_SUCCESS !=
         vkCreateSemaphore(m_device, &sinfo, nullptr, &m_sync.image_available)) {
         spdlog::error("failed to create semaphore for image available");
-        return false;
-    }
-    if (VK_SUCCESS !=
-        vkCreateSemaphore(m_device, &sinfo, nullptr, &m_sync.render_done)) {
-        spdlog::error("failed to create semaphore for render done");
         return false;
     }
     if (VK_SUCCESS !=
@@ -731,20 +746,23 @@ Device::createTextureArray(const std::vector<std::string_view> &paths) {
     auto ret = std::make_unique<Texture>(*this);
 
     internalCreateImage(
-        paths.size(), width, height, VK_FORMAT_R8G8B8A8_SRGB,
-        VK_IMAGE_TILING_OPTIMAL,
+        static_cast<uint32_t>(paths.size()), width, height,
+        VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
 
     transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
-                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, paths.size());
-    ret->copyFrom(buffer->buffer, {width, height}, paths.size());
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          static_cast<uint32_t>(paths.size()));
+    ret->copyFrom(buffer->buffer, {width, height},
+                  static_cast<uint32_t>(paths.size()));
     transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                          paths.size());
+                          static_cast<uint32_t>(paths.size()));
     buffer.reset();
 
-    ret->initArray(paths.size(), VK_FORMAT_R8G8B8A8_SRGB);
+    ret->initArray(static_cast<uint32_t>(paths.size()),
+                   VK_FORMAT_R8G8B8A8_SRGB);
     return ret;
 }
 

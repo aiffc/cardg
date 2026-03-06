@@ -143,7 +143,7 @@ class RendererManager final {
             auto &buffer = it->second->uniforms;
             if (buffer) {
                 memcpy(buffer->data, &data, sizeof(T));
-                buffer->flushMapped();
+                // buffer->flushMapped();
             } else {
                 spdlog::warn("failed to map uniform buffer for pipeline {}",
                              dumpPipelineName(pipeline_name));
@@ -163,7 +163,7 @@ class RendererManager final {
             auto &buffer = it->second->uniforms;
             if (buffer) {
                 memcpy(buffer->data, data, buffer->aligment * size);
-                buffer->flushMapped();
+                // buffer->flushMapped();
             } else {
                 spdlog::warn("failed to map uniform buffer for pipeline {}",
                              dumpPipelineName(pipeline_name));

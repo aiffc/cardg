@@ -254,10 +254,10 @@ void RendererManager::setScissor(uint32_t w, uint32_t h, int32_t x, int32_t y) {
 
     };
     if (w == 0) {
-        v.extent.width = m_window_size.x;
+        v.extent.width = static_cast<uint32_t>(m_window_size.x);
     }
     if (h == 0) {
-        v.extent.height = m_window_size.y;
+        v.extent.height = static_cast<uint32_t>(m_window_size.y);
     }
     vkCmdSetScissor(m_device.cmd(), 0, 1, &v);
 }

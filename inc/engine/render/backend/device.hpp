@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 namespace cg::engine {
@@ -22,8 +23,8 @@ struct Queues {
 };
 
 struct SyncObjs {
-    VkSemaphore image_available = VK_NULL_HANDLE;
-    VkSemaphore render_done = VK_NULL_HANDLE;
+    VkSemaphore image_available;
+    std::vector<VkSemaphore> render_done;
     VkFence in_flight_fence = VK_NULL_HANDLE;
 
     void destroy(const VkDevice device);
@@ -56,7 +57,7 @@ class Device {
 
     VkFence &inFlightFence() { return m_sync.in_flight_fence; }
     VkSemaphore &imageAvailable() { return m_sync.image_available; }
-    VkSemaphore &renderDone() { return m_sync.render_done; }
+    VkSemaphore &renderDone(uint32_t i = 0) { return m_sync.render_done[i]; }
     VkCommandBuffer &cmd() { return m_cmd; }
     void updateWindowSize();
 
@@ -112,10 +113,10 @@ class Device {
             m_phy_info.properties.limits.framebufferColorSampleCounts;
         if (max_counts & flag) {
             m_sample_count = flag;
-            spdlog::info("set sample bit {}", flag);
+            spdlog::info("set sample bit {}", static_cast<uint32_t>(flag));
             return;
         }
-        spdlog::warn("failed to set bit {}", flag);
+        spdlog::warn("failed to set bit {}", static_cast<uint32_t>(flag));
         m_sample_count = VK_SAMPLE_COUNT_1_BIT;
     }
 
@@ -147,7 +148,7 @@ class Device {
         if (ret) {
             ret->cutFrom(*stage, total_size);
             stage.reset();
-            ret->size = datas.size();
+            ret->size = static_cast<uint32_t>(datas.size());
         }
         return ret;
     }
@@ -160,7 +161,7 @@ class Device {
 
         if (ret) {
             ret->map(size);
-            ret->size = size;
+            ret->ranges = size;
         }
         return ret;
     }
@@ -175,7 +176,7 @@ class Device {
 
         if (ret) {
             ret->map(size);
-            ret->size = size;
+            ret->ranges = size;
             if (count > 1) {
                 ret->aligment = aligment;
             }

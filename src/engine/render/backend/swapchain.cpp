@@ -40,10 +40,10 @@ bool Swapchain::init(const glm::ivec2 &window_size) {
         .height = static_cast<uint32_t>(window_size.y),
     };
 
-    extent.width = std::clamp(
+    extent.width = glm::clamp(
         extent.width, m_device.m_phy_info.capabilities.maxImageExtent.width,
         m_device.m_phy_info.capabilities.minImageExtent.width);
-    extent.height = std::clamp(
+    extent.height = glm::clamp(
         extent.height, m_device.m_phy_info.capabilities.maxImageExtent.height,
         m_device.m_phy_info.capabilities.minImageExtent.height);
 

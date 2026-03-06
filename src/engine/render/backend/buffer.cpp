@@ -23,9 +23,9 @@ void Buffer::bind(VkDeviceSize offset) {
     vkBindBufferMemory(*device, buffer, memory, offset);
 }
 
-void *Buffer::map(VkDeviceSize size, VkDeviceSize offset) {
+void *Buffer::map(VkDeviceSize map_size, VkDeviceSize offset) {
     if (*device != VK_NULL_HANDLE) {
-        vkMapMemory(*device, memory, offset, size, 0, &data);
+        vkMapMemory(*device, memory, offset, map_size, 0, &data);
     } else {
         spdlog::error("invalid memory");
     }
@@ -54,7 +54,7 @@ void Buffer::flushMapped() {
     }
 }
 
-void Buffer::copyFrom(const Buffer &src, VkDeviceSize size) {
+void Buffer::copyFrom(const Buffer &src, VkDeviceSize copy_size) {
     if (src.buffer == VK_NULL_HANDLE || src.memory == VK_NULL_HANDLE) {
         spdlog::warn("copy invalid buffer");
         return;
@@ -64,7 +64,7 @@ void Buffer::copyFrom(const Buffer &src, VkDeviceSize size) {
         VkBufferCopy info{
             .srcOffset = 0,
             .dstOffset = 0,
-            .size = size,
+            .size = copy_size,
         };
 
         vkCmdCopyBuffer(cmd, src.buffer, buffer, 1, &info);
@@ -72,7 +72,7 @@ void Buffer::copyFrom(const Buffer &src, VkDeviceSize size) {
     }
 }
 
-void Buffer::cutFrom(Buffer &src, VkDeviceSize size) {
+void Buffer::cutFrom(Buffer &src, VkDeviceSize copy_size) {
     if (src.buffer == VK_NULL_HANDLE || src.memory == VK_NULL_HANDLE) {
         spdlog::warn("copy invalid buffer");
         return;
@@ -82,7 +82,7 @@ void Buffer::cutFrom(Buffer &src, VkDeviceSize size) {
         VkBufferCopy info{
             .srcOffset = 0,
             .dstOffset = 0,
-            .size = size,
+            .size = copy_size,
         };
         vkCmdCopyBuffer(cmd, src.buffer, buffer, 1, &info);
         device.endTemporaryCommand(cmd);

@@ -4,6 +4,7 @@
 #include "../../../inc/engine/render/backend/graphics_pipeline.hpp"
 #include "../../../inc/engine/render/backend/manager.hpp"
 #include "../../../inc/engine/render/backend/swapchain.hpp"
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
@@ -202,6 +203,11 @@ bool Renderer::initSurface() {
 }
 
 bool Renderer::init(VkSampleCountFlagBits sample_count [[maybe_unused]]) {
+    if (!SDL_Vulkan_LoadLibrary(nullptr)) {
+        spdlog::error("sdl load vulkan library failed {}", SDL_GetError());
+    } else {
+        SDL_Vulkan_UnloadLibrary();
+    }
     SDL_Window *raw_window = SDL_CreateWindow(
         "vbr", m_window_size.x, m_window_size.y, SDL_WINDOW_VULKAN);
 
@@ -402,7 +408,7 @@ bool Renderer::end() {
         .commandBufferCount = 1,
         .pCommandBuffers = &m_device->cmd(),
         .signalSemaphoreCount = 1,
-        .pSignalSemaphores = &m_device->renderDone(),
+        .pSignalSemaphores = &m_device->renderDone(m_swapchain->currentIndex()),
     };
     if (VK_SUCCESS != vkQueueSubmit(m_device->graphicsQueue(), 1, &submit_info,
                                     m_device->inFlightFence())) {
@@ -415,7 +421,7 @@ bool Renderer::end() {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext = nullptr,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &m_device->renderDone(),
+        .pWaitSemaphores = &m_device->renderDone(m_swapchain->currentIndex()),
         .swapchainCount = 1,
         .pSwapchains = &**m_swapchain,
         .pImageIndices = &current_index,

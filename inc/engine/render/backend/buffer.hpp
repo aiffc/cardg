@@ -10,7 +10,8 @@ struct Buffer {
     VkBuffer buffer = VK_NULL_HANDLE;
     VkDeviceMemory memory = VK_NULL_HANDLE;
     void *data = nullptr; // mapped data
-    VkDeviceSize size;
+    uint32_t size;        // for vertetx and index draw
+    VkDeviceSize ranges = 0;
     size_t aligment = 0; // for dynamic uniform buffer
 
     Buffer(Device &d);
