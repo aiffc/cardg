@@ -134,6 +134,8 @@ class RendererManager final {
                     std::string_view texture_path);
     void addTextureArray(const PipelineType &pipeline_name,
                          const std::vector<std::string_view> &texture_paths);
+    void addTextureArray(const PipelineType &pipeline_name,
+                         std::string_view texture_path, const glm::ivec2 &size);
     template <typename T>
     void mapUniform(const PipelineType &pipeline_name, const T &data) {
         auto it = m_container.find(pipeline_name);

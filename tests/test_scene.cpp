@@ -31,9 +31,12 @@ void TestScene::init(cg::engine::Context &context) {
     (*context.renderer)
         .addIndexBuffer(cg::engine::backend::PipelineType::BaseTextureArray,
                         indexs);
+    // (*context.renderer)
+    //     .addTextureArray(cg::engine::backend::PipelineType::BaseTextureArray,
+    //                      {"../asset/test.png", "../asset/test2.png"});
     (*context.renderer)
         .addTextureArray(cg::engine::backend::PipelineType::BaseTextureArray,
-                         {"../asset/test.png", "../asset/test2.png"});
+                         "../asset/test3.png", {2, 2});
 }
 
 void TestScene::update(float dt [[maybe_unused]],
@@ -49,8 +52,9 @@ void TestScene::render(cg::engine::Context &context [[maybe_unused]]) {
 
 void TestScene::event(cg::engine::Context &context [[maybe_unused]]) {
     if (context.input.isActionPress("select")) {
-        globleV.index = 1.0f;
-    } else {
-        globleV.index = 0.0f;
+        globleV.index += 1.0f;
+        if (globleV.index > 3.0f) {
+            globleV.index = 0.0f;
+        }
     }
 }

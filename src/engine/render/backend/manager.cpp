@@ -201,6 +201,24 @@ void RendererManager::addTextureArray(
     }
 }
 
+void RendererManager::addTextureArray(const PipelineType &pipeline_name,
+                                      std::string_view texture_path,
+                                      const glm::ivec2 &size) {
+    auto it = m_container.find(pipeline_name);
+    if (it != m_container.end()) {
+        auto texture = m_device.createTextureArray(texture_path, size);
+        if (texture) {
+            it->second->descriptor->updateTexture(*texture, 0, 0);
+            it->second->texture = std::move(texture);
+        } else {
+            spdlog::warn("failed to create texture array for pipeline {}",
+                         dumpPipelineName(pipeline_name));
+        }
+    } else {
+        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
+    }
+}
+
 void RendererManager::setViewport(float w, float h, float x, float y, float min,
                                   float max) {
     VkViewport v{

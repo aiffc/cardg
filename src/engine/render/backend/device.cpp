@@ -747,4 +747,64 @@ Device::createTextureArray(const std::vector<std::string_view> &paths) {
     ret->initArray(paths.size(), VK_FORMAT_R8G8B8A8_SRGB);
     return ret;
 }
+
+std::unique_ptr<Texture> Device::createTextureArray(std::string_view path,
+                                                    const glm::ivec2 &size) {
+    int width, height, channels;
+    stbi_uc *pixels =
+        stbi_load(path.data(), &width, &height, &channels, STBI_rgb_alpha);
+
+    if (!pixels) {
+        spdlog::error("failed to load texture {}", path);
+        return nullptr;
+    }
+
+    // create buffer
+    const int texture_size = width * height * 4;
+    const glm::ivec2 frame_size{width / size.x, height / size.y};
+    const size_t frame_buffer_size = frame_size.x * frame_size.y * 4;
+    auto buffer = createBuffer(texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    buffer->map(texture_size);
+    for (int i = 0; i < size.x * size.y; ++i) {
+        for (int y = 0; y < frame_size.y; ++y) {
+            int indexy = i / size.x;
+            int indexx = i - indexy * size.x;
+            // copy row to mapped buffer
+            memcpy((uint8_t *)buffer->data +
+                       (i * frame_buffer_size + (y * frame_size.x) * 4),
+                   (uint8_t *)pixels + (indexy * width * frame_size.y +
+                                        y * width + indexx * frame_size.x) *
+                                           4,
+                   frame_size.x * 4);
+        }
+    }
+
+    buffer->unmap();
+    stbi_image_free(pixels);
+    pixels = nullptr;
+
+    auto ret = std::make_unique<Texture>(*this);
+    uint32_t layer_count = size.x * size.y;
+
+    internalCreateImage(
+        layer_count, width / size.x, height / size.y, VK_FORMAT_R8G8B8A8_SRGB,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
+
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, layer_count);
+    ret->copyFrom(buffer->buffer, {width / size.x, height / size.y},
+                  layer_count);
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+                          layer_count);
+    buffer.reset();
+
+    ret->initArray(layer_count, VK_FORMAT_R8G8B8A8_SRGB);
+    return ret;
+}
 } // namespace cg::engine::backend

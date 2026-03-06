@@ -2,6 +2,7 @@
 
 #include "buffer.hpp"
 #include "util.hpp"
+#include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 #include <vulkan/vulkan_core.h>
 
@@ -207,6 +208,8 @@ class Device {
     std::unique_ptr<Texture> createTexture(std::string_view path);
     std::unique_ptr<Texture>
     createTextureArray(const std::vector<std::string_view> &paths);
+    std::unique_ptr<Texture> createTextureArray(std::string_view path,
+                                                const glm::ivec2 &size);
 
     void waitIdle() { vkDeviceWaitIdle(m_device); }
 
