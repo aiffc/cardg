@@ -176,35 +176,10 @@ class Device {
 
         if (ret) {
             ret->map(size);
-            ret->ranges = size;
-            if (count > 1) {
-                ret->aligment = aligment;
-            }
+            ret->ranges = aligment;
         }
         return ret;
     }
-
-    // template <typename DynamicT, typename NormalT>
-    // std::unique_ptr<Buffer> createMixUniformBuffer(uint32_t count = 1) {
-    //     size_t dynamic_aligment = calcDynamicUniformAligment<DynamicT>();
-    //     VkDeviceSize size = dynamic_aligment * count;
-
-    //     size_t normal_aligment = calcDynamicUniformAligment<NormalT>();
-    //     size += normal_aligment;
-
-    //     auto ret = createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    //                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-    //                                 VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-    //     if (ret) {
-    //         ret->map(size);
-    //         ret->size = size;
-    //         if (count > 1) {
-    //             ret->aligment = aligment;
-    //         }
-    //     }
-    //     return ret;
-    // }
 
     std::unique_ptr<Texture> createTexture(std::string_view path);
     std::unique_ptr<Texture>

@@ -92,6 +92,9 @@ bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
         VK_SHADER_STAGE_FRAGMENT_BIT);
     base->descriptor->addDescriptorBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                            VK_SHADER_STAGE_FRAGMENT_BIT);
+    base->descriptor->addDescriptorBinding(
+        2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+        VK_SHADER_STAGE_VERTEX_BIT);
     if (!base->descriptor->init()) {
         spdlog::error("failed to create descriptor things");
         return false;
@@ -125,6 +128,12 @@ bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
         m_device.createUniformBuffer<cg::engine::buffer::BaseTextureArrayU>();
     base->descriptor->updateBuffer(*base->uniforms, 1, 0,
                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    base->duniforms =
+        m_device
+            .createDynamicUniformBuffer<cg::engine::buffer::BaseTextureArrayDU>(
+                3);
+    base->descriptor->updateBuffer(*base->duniforms, 2, 0,
+                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
     m_container.emplace(PipelineType::BaseTextureArray, std::move(base));
     return true;
 }
@@ -291,9 +300,11 @@ void RendererManager::drawIndex(uint32_t count) {
 }
 
 void RendererManager::bindDescriptorSet(const VkDescriptorSet &set,
-                                        const VkPipelineLayout &layout) {
+                                        const VkPipelineLayout &layout,
+                                        std::vector<uint32_t> dynamic_offsets) {
     vkCmdBindDescriptorSets(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            layout, 0, 1, &set, 0, nullptr);
+                            layout, 0, 1, &set, dynamic_offsets.size(),
+                            dynamic_offsets.data());
 }
 
 void RendererManager::pushConstant(VkPipelineLayout &layout,
@@ -368,19 +379,33 @@ void RendererManager::drawBaseTextureArray() {
         }
         setViewport();
         setScissor();
-        if (it->second->descriptor) {
-            bindDescriptorSet(it->second->descriptor->set(),
-                              **it->second->layout);
-        }
+
         auto &vertex_buffer = it->second->vbuffers;
         auto &index_buffer = it->second->ibuffers;
         if (vertex_buffer) {
             bindVertex(*vertex_buffer);
             if (index_buffer) {
                 bindIndex(*index_buffer);
-                drawIndex(index_buffer->size);
+                if (it->second->descriptor) {
+                    for (int i = 0; i < 3; ++i) {
+                        bindDescriptorSet(
+                            it->second->descriptor->set(), **it->second->layout,
+                            {static_cast<uint32_t>(
+                                it->second->duniforms->ranges * i)});
+
+                        drawIndex(index_buffer->size);
+                    }
+                }
             } else {
-                draw(vertex_buffer->size);
+                if (it->second->descriptor) {
+                    for (int i = 0; i < 3; ++i) {
+                        bindDescriptorSet(
+                            it->second->descriptor->set(), **it->second->layout,
+                            {static_cast<uint32_t>(
+                                it->second->duniforms->ranges * i)});
+                    }
+                    draw(vertex_buffer->size);
+                }
             }
         }
     } else {

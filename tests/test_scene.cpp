@@ -19,10 +19,10 @@ void TestScene::init(cg::engine::Context &context) {
     // (*context.renderer).addBasePipelineIndexBuffer(indexs);
 
     const std::vector<cg::engine::buffer::BaseTexture> vertices = {
-        {{-0.5f, -0.5f}, {0.0f, 0.0f}},
-        {{0.5f, -0.5f}, {1.0f, 0.0f}},
-        {{0.5f, 0.5f}, {1.0f, 1.0f}},
-        {{-0.5f, 0.5f}, {0.0f, 1.0f}},
+        {{-0.2f, -0.2f}, {0.0f, 0.0f}},
+        {{0.2f, -0.2f}, {1.0f, 0.0f}},
+        {{0.2f, 0.2f}, {1.0f, 1.0f}},
+        {{-0.2f, 0.2f}, {0.0f, 1.0f}},
     };
     (*context.renderer)
         .addVertexBuffer<cg::engine::buffer::BaseTexture>(
@@ -41,6 +41,13 @@ void TestScene::init(cg::engine::Context &context) {
 
 void TestScene::update(float dt [[maybe_unused]],
                        cg::engine::Context &context [[maybe_unused]]) {
+    std::vector<cg::engine::buffer::BaseTextureArrayDU> datas = {
+        {{0.2f, -0.2f}}, {{0.7f, 0.7f}}, {{0.4f, 0.4f}}};
+
+    (*context.renderer)
+        .mapDynamicUniform(cg::engine::backend::PipelineType::BaseTextureArray,
+                           datas);
+
     (*context.renderer)
         .mapUniform<cg::engine::buffer::BaseTextureArrayU>(
             cg::engine::backend::PipelineType::BaseTextureArray, globleV);

@@ -5,8 +5,11 @@
 #include "graphics_pipeline.hpp"
 #include "image.hpp"
 #include "layout.hpp"
+#include <SDL3/SDL_stdinc.h>
+#include <cstring>
 #include <glm/glm.hpp>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -26,6 +29,10 @@ struct BaseTexture {
 struct BaseTextureArrayU {
     float index;
 };
+
+struct BaseTextureArrayDU {
+    glm::vec2 offset;
+};
 } // namespace cg::engine::buffer
 
 namespace cg::engine::backend {
@@ -39,6 +46,7 @@ struct ManagerHashContainer {
     std::unique_ptr<Buffer> vbuffers;
     std::unique_ptr<Buffer> ibuffers;
     std::unique_ptr<Buffer> uniforms;
+    std::unique_ptr<Buffer> duniforms;
     std::unique_ptr<Texture> texture;
     ManagerHashContainer();
     ~ManagerHashContainer();
@@ -101,7 +109,8 @@ class RendererManager final {
     void bindIndex(cg::engine::backend::Buffer &buffer);
     void drawIndex(uint32_t count);
     void bindDescriptorSet(const VkDescriptorSet &set,
-                           const VkPipelineLayout &layout);
+                           const VkPipelineLayout &layout,
+                           std::vector<uint32_t> dynamic_offsets = {});
     void pushConstant(VkPipelineLayout &layout, VkShaderStageFlags stage,
                       uint32_t offset, uint32_t size, void *data);
 
@@ -156,14 +165,17 @@ class RendererManager final {
     }
 
     template <typename T>
-    void mapDynamicUniform(const PipelineType &pipeline_name, const T *data,
-                           uint32_t size) {
+    void mapDynamicUniform(const PipelineType &pipeline_name,
+                           const std::vector<T> &datas) {
         auto it = m_container.find(pipeline_name);
         if (it != m_container.end()) {
-            auto &buffer = it->second->uniforms;
+            auto &buffer = it->second->duniforms;
             if (buffer) {
-                memcpy(buffer->data, data, buffer->aligment * size);
-                // buffer->flushMapped();
+                for (size_t i = 0; i < datas.size(); ++i) {
+                    memcpy((uint8_t *)buffer->data + i * buffer->ranges,
+                           &datas[i], sizeof(T));
+                }
+                buffer->flushMapped();
             } else {
                 spdlog::warn("failed to map uniform buffer for pipeline {}",
                              dumpPipelineName(pipeline_name));
@@ -174,6 +186,14 @@ class RendererManager final {
                          dumpPipelineName(pipeline_name));
         }
     }
+
+    // template <typename T> void *aligmentAlloc(uint32_t size) {
+    //     size_t aligment = m_device.calcDynamicUniformAligment<T>();
+    //     void *ret = SDL_aligned_alloc(aligment, size);
+    //     return ret;
+    // }
+
+    // void aligmentFree(void *ptr) { SDL_aligned_free(ptr); }
 
     RendererManager(RendererManager &) = delete;
     RendererManager(RendererManager &&) = delete;

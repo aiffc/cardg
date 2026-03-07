@@ -12,7 +12,7 @@ struct Buffer {
     void *data = nullptr; // mapped data
     uint32_t size;        // for vertetx and index draw
     VkDeviceSize ranges = 0;
-    size_t aligment = 0; // for dynamic uniform buffer
+    // size_t aligment = 0; // for dynamic uniform buffer
 
     Buffer(Device &d);
     ~Buffer();
