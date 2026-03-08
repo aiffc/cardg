@@ -21,6 +21,8 @@ find_package(SDL3 REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(glm REQUIRED)
+find_package(Freetype REQUIRED)
+find_package(harfbuzz REQUIRED)
 
 set(SOURCE_FILES
   src/engine/core/app.cpp
@@ -53,4 +55,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   ${Vulkan_LIBRARIES}
   spdlog::spdlog
   glm::glm
+  freetype
+  Freetype::Freetype
+  harfbuzz::harfbuzz
 )

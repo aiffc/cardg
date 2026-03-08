@@ -147,8 +147,8 @@ class RendererManager final {
                          std::string_view texture_path, const glm::ivec2 &size);
     template <typename T>
     void mapUniform(const PipelineType &pipeline_name, const T &data) {
-        auto it = m_container.find(pipeline_name);
-        if (it != m_container.end()) {
+        if (auto it = m_container.find(pipeline_name);
+            it != m_container.end()) {
             auto &buffer = it->second->uniforms;
             if (buffer) {
                 memcpy(buffer->data, &data, sizeof(T));
@@ -167,8 +167,8 @@ class RendererManager final {
     template <typename T>
     void mapDynamicUniform(const PipelineType &pipeline_name,
                            const std::vector<T> &datas) {
-        auto it = m_container.find(pipeline_name);
-        if (it != m_container.end()) {
+        if (auto it = m_container.find(pipeline_name);
+            it != m_container.end()) {
             auto &buffer = it->second->duniforms;
             if (buffer) {
                 for (size_t i = 0; i < datas.size(); ++i) {

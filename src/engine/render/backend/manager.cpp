@@ -153,8 +153,7 @@ bool RendererManager::init(const glm::vec2 &size) {
 
 void RendererManager::addIndexBuffer(const PipelineType &pipeline_name,
                                      const std::vector<uint32_t> &data) {
-    auto it = m_container.find(pipeline_name);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
         auto buff = m_device.createUsageBuffer<uint32_t>(
             data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
         if (buff) {
@@ -171,8 +170,7 @@ void RendererManager::addIndexBuffer(const PipelineType &pipeline_name,
 
 void RendererManager::addTexture(const PipelineType &pipeline_name,
                                  std::string_view texture_path) {
-    auto it = m_container.find(pipeline_name);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
         auto texture = m_device.createTexture(texture_path);
         if (texture) {
             if (it->second->descriptor) {
@@ -195,8 +193,7 @@ void RendererManager::addTexture(const PipelineType &pipeline_name,
 void RendererManager::addTextureArray(
     const PipelineType &pipeline_name,
     const std::vector<std::string_view> &texture_paths) {
-    auto it = m_container.find(pipeline_name);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
         auto texture = m_device.createTextureArray(texture_paths);
         if (texture) {
             it->second->descriptor->updateTexture(*texture, 0, 0);
@@ -314,8 +311,8 @@ void RendererManager::pushConstant(VkPipelineLayout &layout,
 }
 
 void RendererManager::drawBase() {
-    auto it = m_container.find(PipelineType::Base);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(PipelineType::Base);
+        it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
             vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -340,8 +337,8 @@ void RendererManager::drawBase() {
 }
 
 void RendererManager::drawBaseTexture() {
-    auto it = m_container.find(PipelineType::BaseTexture);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(PipelineType::BaseTexture);
+        it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
             vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -370,8 +367,8 @@ void RendererManager::drawBaseTexture() {
 }
 
 void RendererManager::drawBaseTextureArray() {
-    auto it = m_container.find(PipelineType::BaseTextureArray);
-    if (it != m_container.end()) {
+    if (auto it = m_container.find(PipelineType::BaseTextureArray);
+        it != m_container.end()) {
         auto &pipeline = it->second->pipeline;
         if (**pipeline != VK_NULL_HANDLE) {
             vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
