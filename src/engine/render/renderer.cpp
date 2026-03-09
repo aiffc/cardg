@@ -1,7 +1,6 @@
 #include "../../../inc/engine/render/renderer.hpp"
 #include "../../../inc/engine/render/backend/buffer.hpp"
 #include "../../../inc/engine/render/backend/device.hpp"
-#include "../../../inc/engine/render/backend/graphics_pipeline.hpp"
 #include "../../../inc/engine/render/backend/manager.hpp"
 #include "../../../inc/engine/render/backend/swapchain.hpp"
 #include <SDL3/SDL_error.h>
@@ -245,6 +244,7 @@ bool Renderer::init(VkSampleCountFlagBits sample_count [[maybe_unused]]) {
         spdlog::error("unable to init manager");
         return false;
     }
+
     spdlog::info("app init done");
     return true;
 }

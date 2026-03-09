@@ -77,6 +77,8 @@ struct ManagerHashFun {
     }
 };
 
+class Font;
+
 class RendererManager final {
     friend class cg::engine::Renderer;
 
@@ -86,6 +88,7 @@ class RendererManager final {
     std::unordered_map<PipelineType, std::unique_ptr<ManagerHashContainer>,
                        ManagerHashFun>
         m_container;
+    std::unique_ptr<cg::engine::backend::Font> m_font;
 
   private:
     [[nodiscard]] bool initBasePipeline(const glm::vec2 &size);

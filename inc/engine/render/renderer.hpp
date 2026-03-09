@@ -1,6 +1,5 @@
 #pragma once
 
-#include "backend/graphics_pipeline.hpp"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
 #include <glm/glm.hpp>
@@ -12,7 +11,6 @@ namespace cg::engine::backend {
 class Device;
 class Swapchain;
 struct Buffer;
-class GraphicsPipeline;
 class RendererManager;
 } // namespace cg::engine::backend
 
@@ -64,6 +62,8 @@ class Renderer final {
     void quit();
 
     cg::engine::backend::RendererManager &operator*() { return *m_manager; }
+    cg::engine::backend::RendererManager &manager() { return *m_manager; }
+    // cg::engine::backend::Font &font() { return *m_font; }
 
     Renderer(Renderer &) = delete;
     Renderer(Renderer &&) = delete;

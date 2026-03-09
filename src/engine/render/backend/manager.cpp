@@ -1,5 +1,6 @@
 #include "../../../../inc/engine/render/backend/manager.hpp"
 #include "../../../../inc/engine/render/backend/device.hpp"
+#include "../../../../inc/engine/render/backend/font.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -139,6 +140,12 @@ bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
 }
 bool RendererManager::init(const glm::vec2 &size) {
     m_window_size = size;
+    // init font
+    m_font = std::make_unique<cg::engine::backend::Font>();
+    if (!m_font->init()) {
+        spdlog::error("unable to init font");
+        return false;
+    }
     if (!initBasePipeline(size)) {
         return false;
     }
