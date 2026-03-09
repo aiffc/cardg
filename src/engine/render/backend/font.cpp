@@ -1,16 +1,63 @@
 #include "../../../../inc/engine/render/backend/font.hpp"
+#include <algorithm>
 #include <freetype/freetype.h>
+#include <hb.h>
 #include <memory>
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <vector>
 
 namespace cg::engine::backend {
 
 FontFace::FontFace(FT_Face &f, const FontSize &s) : face(f), size(s) {}
 FontFace::~FontFace() {
+    if (buffer) {
+        hb_buffer_destroy(buffer);
+    }
+    if (font) {
+        hb_font_destroy(font);
+    }
+
     if (face) {
         FT_Done_Face(face);
+    }
+}
+
+bool FontFace::init() {
+    font = hb_ft_font_create(face, NULL);
+    if (!font) {
+        return false;
+    }
+    buffer = hb_buffer_create();
+    if (!buffer) {
+        return false;
+    }
+
+    return true;
+}
+
+void FontFace::addStr(std::string_view str) {
+    if (buffer) {
+        hb_buffer_destroy(buffer);
+    }
+    hb_buffer_add_utf8(buffer, str.data(), -1, 0, -1);
+    hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
+    hb_buffer_set_script(buffer, HB_SCRIPT_HAN);
+    hb_buffer_set_language(buffer, hb_language_from_string("zh", -1));
+    std::vector<hb_feature_t> features;
+    hb_shape(font, buffer, features.data(), features.size());
+
+    uint32_t count;
+    hb_glyph_info_t *glyph_infos = hb_buffer_get_glyph_infos(buffer, &count);
+    hb_glyph_position_t *glyph_positions =
+        hb_buffer_get_glyph_positions(buffer, &count);
+    glm::ivec2 pos = {0, 0};
+    for (uint32_t i = 0; i < count; ++i) {
+        unsigned int cluster = glyph_infos[i].cluster;
+        FT_Load_Char(face, cluster, FT_LOAD_RENDER);
+        pos.x += glyph_positions[i].x_offset;
+        pos.y += glyph_positions[i].y_offset;
     }
 }
 
@@ -51,8 +98,9 @@ void Font::addFace(std::string_view path, const FontSize &size) {
             FT_Done_Face(face);
             return;
         }
-        m_faces.emplace(std::string(path),
-                        std::make_unique<FontFace>(face, size));
+        auto ptr = std::make_unique<FontFace>(face, size);
+        ptr->init();
+        m_faces.emplace(std::string(path), std::move(ptr));
     }
 }
 

@@ -10,6 +10,8 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include <glm/glm.hpp>
+#include <hb-ft.h>
+#include <hb.h>
 
 namespace cg::engine::backend {
 
@@ -20,12 +22,22 @@ struct FontSize {
     FT_UInt h;
 };
 
+struct FontStr {
+    uint32_t w;
+    uint32_t h;
+    uint8_t *buff;
+};
+
 struct FontFace {
     FT_Face face;
     FontSize size;
+    hb_font_t *font = nullptr;
+    hb_buffer_t *buffer = nullptr;
 
     FontFace(FT_Face &f, const FontSize &s);
     ~FontFace();
+    bool init();
+    void addStr(std::string_view str);
 };
 
 class Font final {
