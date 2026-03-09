@@ -5,6 +5,7 @@
 #include "../../../../extr/stb/stb_image.h"
 #include <algorithm>
 #include <glm/glm.hpp>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <set>
@@ -708,6 +709,49 @@ std::unique_ptr<Texture> Device::createTexture(std::string_view path) {
     buffer.reset();
 
     ret->init(VK_FORMAT_R8G8B8A8_SRGB);
+    return ret;
+}
+
+std::unique_ptr<Texture> Device::createCharacter(const FT_GlyphSlot &slot) {
+    VkDeviceSize texture_size = slot->bitmap.rows * slot->bitmap.width;
+    auto ret = std::make_unique<Texture>(*this);
+    // dump bit map
+    // for (uint i = 0; i < slot->bitmap.rows; ++i) {
+    //     for (uint j = 0; j < slot->bitmap.width; ++j) {
+    //         uint8_t *v =
+    //             (uint8_t *)slot->bitmap.buffer + i * slot->bitmap.width + j;
+    //         if (*v > 0) {
+    //             std::cout << "1";
+
+    //         } else {
+    //             std::cout << "0";
+    //         }
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    auto buffer = createBuffer(texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    buffer->map(texture_size);
+    memcpy(buffer->data, slot->bitmap.buffer,
+           static_cast<size_t>(texture_size));
+    buffer->unmap();
+
+    internalCreateImage(
+        1, slot->bitmap.width, slot->bitmap.rows, VK_FORMAT_R8_UNORM,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
+
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    ret->copyFrom(buffer->buffer, {slot->bitmap.width, slot->bitmap.rows});
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    buffer.reset();
+
+    ret->init(VK_FORMAT_R8_UNORM);
     return ret;
 }
 

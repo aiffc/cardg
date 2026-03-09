@@ -1,10 +1,9 @@
 #include "test_scene.hpp"
+#include "../inc/engine/render/backend/font.hpp"
 #include "../inc/engine/render/backend/manager.hpp"
 #include "../inc/map.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
-
-static cg::engine::buffer::BaseTextureArrayU globleV{0.0f};
 
 void TestScene::init(cg::engine::Context &context) {
     // cg::engine::Scene::init(context);
@@ -26,42 +25,34 @@ void TestScene::init(cg::engine::Context &context) {
     };
     (*context.renderer)
         .addVertexBuffer<cg::engine::buffer::BaseTexture>(
-            cg::engine::backend::PipelineType::BaseTextureArray, vertices);
+            cg::engine::backend::PipelineType::Font, vertices);
     std::vector<uint32_t> indexs{0, 1, 2, 2, 3, 0};
     (*context.renderer)
-        .addIndexBuffer(cg::engine::backend::PipelineType::BaseTextureArray,
-                        indexs);
+        .addIndexBuffer(cg::engine::backend::PipelineType::Font, indexs);
     // (*context.renderer)
-    //     .addTextureArray(cg::engine::backend::PipelineType::BaseTextureArray,
+    //     .addTextureArray(cg::engine::backend::PipelineType::Font,
     //                      {"../asset/test.png", "../asset/test2.png"});
+    cg::engine::backend::FontSize size{0, 500};
     (*context.renderer)
-        .addTextureArray(cg::engine::backend::PipelineType::BaseTextureArray,
-                         "../asset/test3.png", {2, 2});
+        .addCharacters(cg::engine::backend::PipelineType::Font,
+                       "../asset/fusion-pixel-8px-proportional-zh_hant.ttf",
+                       size, 'P');
+    // (*context.renderer)
+    //     .addTextureArray(cg::engine::backend::PipelineType::Font,
+    //                      "../asset/test3.png", {2, 2});
 }
 
 void TestScene::update(float dt [[maybe_unused]],
                        cg::engine::Context &context [[maybe_unused]]) {
-    std::vector<cg::engine::buffer::BaseTextureArrayDU> datas = {
-        {{0.2f, -0.2f}}, {{0.7f, 0.7f}}, {{0.4f, 0.4f}}};
-
+    cg::engine::buffer::FontU color;
+    color.color = {1.0f, 0.0f, 0.0f, 1.0f};
     (*context.renderer)
-        .mapDynamicUniform(cg::engine::backend::PipelineType::BaseTextureArray,
-                           datas);
-
-    (*context.renderer)
-        .mapUniform<cg::engine::buffer::BaseTextureArrayU>(
-            cg::engine::backend::PipelineType::BaseTextureArray, globleV);
+        .mapUniform<cg::engine::buffer::FontU>(
+            cg::engine::backend::PipelineType::Font, color);
 }
 
 void TestScene::render(cg::engine::Context &context [[maybe_unused]]) {
-    context.renderer.drawBaseTextureArray();
+    (*context.renderer).drawFont();
 }
 
-void TestScene::event(cg::engine::Context &context [[maybe_unused]]) {
-    if (context.input.isActionPress("select")) {
-        globleV.index += 1.0f;
-        if (globleV.index > 3.0f) {
-            globleV.index = 0.0f;
-        }
-    }
-}
+void TestScene::event(cg::engine::Context &context [[maybe_unused]]) {}

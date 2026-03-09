@@ -7,6 +7,7 @@
 #include "layout.hpp"
 #include <SDL3/SDL_stdinc.h>
 #include <cstring>
+#include <freetype/fttypes.h>
 #include <glm/glm.hpp>
 #include <memory>
 #include <spdlog/spdlog.h>
@@ -33,10 +34,15 @@ struct BaseTextureArrayU {
 struct BaseTextureArrayDU {
     glm::vec2 offset;
 };
+
+struct FontU {
+    glm::vec4 color;
+};
+
 } // namespace cg::engine::buffer
 
 namespace cg::engine::backend {
-
+struct FontSize;
 class Device;
 
 struct ManagerHashContainer {
@@ -56,6 +62,7 @@ enum class PipelineType {
     Base,
     BaseTexture,
     BaseTextureArray,
+    Font,
 };
 
 static inline std::string dumpPipelineName(const PipelineType &p) {
@@ -94,12 +101,9 @@ class RendererManager final {
     [[nodiscard]] bool initBasePipeline(const glm::vec2 &size);
     [[nodiscard]] bool initBaseTexturePipeline(const glm::vec2 &size);
     [[nodiscard]] bool initBaseTextureArrayPipeline(const glm::vec2 &size);
+    [[nodiscard]] bool initFont(const glm::vec2 &size);
     [[nodiscard]] bool init(const glm::vec2 &size);
     void resize(const glm::vec2 &v) { m_window_size = v; }
-
-    void drawBase();
-    void drawBaseTexture();
-    void drawBaseTextureArray();
 
   private:
     void setViewport(float w = 0.0f, float h = 0.0f, float x = 0.0f,
@@ -148,6 +152,9 @@ class RendererManager final {
                          const std::vector<std::string_view> &texture_paths);
     void addTextureArray(const PipelineType &pipeline_name,
                          std::string_view texture_path, const glm::ivec2 &size);
+    void addCharacters(const PipelineType &pipeline_name,
+                       std::string_view ttf_path, const FontSize &size,
+                       FT_ULong c);
     template <typename T>
     void mapUniform(const PipelineType &pipeline_name, const T &data) {
         if (auto it = m_container.find(pipeline_name);
@@ -190,13 +197,10 @@ class RendererManager final {
         }
     }
 
-    // template <typename T> void *aligmentAlloc(uint32_t size) {
-    //     size_t aligment = m_device.calcDynamicUniformAligment<T>();
-    //     void *ret = SDL_aligned_alloc(aligment, size);
-    //     return ret;
-    // }
-
-    // void aligmentFree(void *ptr) { SDL_aligned_free(ptr); }
+    void drawBase();
+    void drawBaseTexture();
+    void drawBaseTextureArray();
+    void drawFont();
 
     RendererManager(RendererManager &) = delete;
     RendererManager(RendererManager &&) = delete;

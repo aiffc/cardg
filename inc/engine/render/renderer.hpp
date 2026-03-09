@@ -49,11 +49,6 @@ class Renderer final {
     bool end();
 
   public:
-    void drawBase();
-    void drawBaseTexture();
-    void drawBaseTextureArray();
-
-  public:
     Renderer(const glm::ivec2 &size);
     ~Renderer();
 

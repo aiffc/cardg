@@ -8,14 +8,19 @@
 namespace cg::engine::backend {
 
 FontFace::FontFace(FT_Face &f, const FontSize &s) : face(f), size(s) {}
-FontFace::~FontFace() { FT_Done_Face(face); }
+FontFace::~FontFace() {
+    if (face) {
+        FT_Done_Face(face);
+    }
+}
 
 Font::Font() = default;
 Font::~Font() {
-    FT_Done_FreeType(m_ft);
     if (!m_faces.empty()) {
         m_faces.clear();
     }
+    FT_Done_FreeType(m_ft);
+    spdlog::info("font quit done");
 };
 
 bool Font::init() {
@@ -35,7 +40,7 @@ void Font::addFace(std::string_view path, const FontSize &size) {
     } else {
         FT_Face face;
         FT_Error error;
-        error = FT_New_Face(m_ft, "font.ttf", 0, &face);
+        error = FT_New_Face(m_ft, path.data(), 0, &face);
         if (error) {
             spdlog::warn("failed to load ttf file {}", path);
             return;
@@ -85,8 +90,8 @@ FontSize Font::size(std::string_view key) const {
     }
 }
 
-std::optional<FT_GlyphSlot> Font::loadChar(std::string_view key,
-                                           FT_ULong char_code) {
+std::optional<const FT_GlyphSlot> Font::loadChar(std::string_view key,
+                                                 FT_ULong char_code) {
     if (auto it = m_faces.find(std::string(key)); it != m_faces.end()) {
         FT_Error error =
             FT_Load_Char(it->second->face, char_code, FT_LOAD_RENDER);

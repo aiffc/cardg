@@ -256,6 +256,7 @@ void Renderer::quit() {
         }
         m_manager.reset();
     }
+    spdlog::info("dump");
     if (m_swapchain) {
         if (m_device) {
             m_device->waitIdle();
@@ -266,6 +267,7 @@ void Renderer::quit() {
         m_device->waitIdle();
         m_device.reset();
     }
+
     if (m_surface != VK_NULL_HANDLE) {
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         m_surface = VK_NULL_HANDLE;
@@ -287,7 +289,7 @@ void Renderer::quit() {
     if (m_window) {
         m_window.reset();
     }
-    spdlog::info("app quit done");
+    spdlog::info("app renderer quit done");
 }
 
 bool Renderer::begin(float r, float g, float b, float a) {
@@ -443,9 +445,5 @@ bool Renderer::end() {
     }
     return true;
 };
-
-void Renderer::drawBase() { m_manager->drawBase(); }
-void Renderer::drawBaseTexture() { m_manager->drawBaseTexture(); }
-void Renderer::drawBaseTextureArray() { m_manager->drawBaseTextureArray(); }
 
 } // namespace cg::engine

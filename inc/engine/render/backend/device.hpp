@@ -2,10 +2,13 @@
 
 #include "buffer.hpp"
 #include "util.hpp"
+#include <ft2build.h>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 
 namespace cg::engine {
 class Renderer;
@@ -186,6 +189,7 @@ class Device {
     createTextureArray(const std::vector<std::string_view> &paths);
     std::unique_ptr<Texture> createTextureArray(std::string_view path,
                                                 const glm::ivec2 &size);
+    std::unique_ptr<Texture> createCharacter(const FT_GlyphSlot &slot);
 
     void waitIdle() { vkDeviceWaitIdle(m_device); }
 

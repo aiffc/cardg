@@ -48,8 +48,8 @@ class Font final {
     void size(std::string_view key, const FontSize &size);
     FontSize size(std::string_view key) const;
 
-    std::optional<FT_GlyphSlot> loadChar(std::string_view key,
-                                         FT_ULong char_code);
+    std::optional<const FT_GlyphSlot> loadChar(std::string_view key,
+                                               FT_ULong char_code);
 
     Font(Font &) = delete;
     Font(Font &&) = delete;
