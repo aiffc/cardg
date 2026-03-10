@@ -32,15 +32,19 @@ void TestScene::init(cg::engine::Context &context) {
     // (*context.renderer)
     //     .addTextureArray(cg::engine::backend::PipelineType::Font,
     //                      {"../asset/test.png", "../asset/test2.png"});
-    cg::engine::backend::FontSize size{0, 50};
+    // cg::engine::backend::FontSize size{0, 50};
     // (*context.renderer)
     //     .addCharacters(cg::engine::backend::PipelineType::Font,
     //                    "../asset/fusion-pixel-8px-proportional-zh_hant.ttf",
     //                    size, 'P');
     (*context.renderer)
         .addText(cg::engine::backend::PipelineType::Font,
-                 "../asset/fusion-pixel-8px-proportional-zh_hant.ttf", size,
-                 "hello world");
+                 "../asset/fusion-pixel-8px-proportional-zh_hant.ttf",
+                 "hello world what a beautiful world, let's do some things");
+    // (*context.renderer)
+    //     .addText(cg::engine::backend::PipelineType::Font,
+    //              "../asset/fusion-pixel-8px-proportional-zh_hant.ttf",
+    //              "hello world");
     // (*context.renderer)
     //     .addTextureArray(cg::engine::backend::PipelineType::Font,
     //                      "../asset/test3.png", {2, 2});

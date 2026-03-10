@@ -308,10 +308,10 @@ void RendererManager::addCharacters(const PipelineType &pipeline_name,
 }
 
 void RendererManager::addText(const PipelineType &pipeline_name,
-                              std::string_view ttf_path, const FontSize &size,
-                              std::string_view str,
-                              const glm::ivec2 &text_size) {
+                              std::string_view ttf_path, std::string_view str,
+                              const glm::ivec2 &text_size, uint32_t line_max) {
     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+        cg::engine::backend::FontSize size{text_size.x / line_max, 0};
         m_font->size(ttf_path, size);
         uint8_t *buff = m_font->loadStr(ttf_path, str, text_size);
         if (buff) {

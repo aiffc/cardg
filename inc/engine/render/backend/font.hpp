@@ -22,19 +22,24 @@ struct FontSize {
     FT_UInt h;
 };
 
-struct FontStr {
-    uint32_t w;
-    uint32_t h;
-    uint8_t *buff;
+struct FontFormat {
+    FontSize size;
+    uint32_t left_offset;
+    uint32_t right_offset;
+    uint32_t top_offset;
+    uint32_t botton_offset;
+    uint32_t column_interval;
+    uint32_t row_interval;
+    uint32_t line_max;
 };
 
 struct FontFace {
     FT_Face face;
-    FontSize size;
+    FontFormat format;
     hb_font_t *font = nullptr;
     hb_buffer_t *buffer = nullptr;
 
-    FontFace(FT_Face &f, const FontSize &s);
+    FontFace(FT_Face &f, const FontFormat &s);
     ~FontFace();
     bool init();
     uint8_t *createStr(std::string_view str, const glm::ivec2 &size);

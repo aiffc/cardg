@@ -156,8 +156,8 @@ class RendererManager final {
                        std::string_view ttf_path, const FontSize &size,
                        FT_ULong c);
     void addText(const PipelineType &pipeline_name, std::string_view ttf_path,
-                 const FontSize &size, std::string_view str,
-                 const glm::ivec2 &text_size = {500, 500});
+                 std::string_view str, const glm::ivec2 &text_size = {500, 500},
+                 uint32_t line_max = 10);
     template <typename T>
     void mapUniform(const PipelineType &pipeline_name, const T &data) {
         if (auto it = m_container.find(pipeline_name);
