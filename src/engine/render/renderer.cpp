@@ -256,7 +256,6 @@ void Renderer::quit() {
         }
         m_manager.reset();
     }
-    spdlog::info("dump");
     if (m_swapchain) {
         if (m_device) {
             m_device->waitIdle();
