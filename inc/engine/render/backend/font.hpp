@@ -37,7 +37,7 @@ struct FontFace {
     FontFace(FT_Face &f, const FontSize &s);
     ~FontFace();
     bool init();
-    void addStr(std::string_view str);
+    uint8_t *createStr(std::string_view str, const glm::ivec2 &size);
 };
 
 class Font final {
@@ -62,6 +62,8 @@ class Font final {
 
     std::optional<const FT_GlyphSlot> loadChar(std::string_view key,
                                                FT_ULong char_code);
+    uint8_t *loadStr(std::string_view key, std::string_view str,
+                     const glm::ivec2 &size);
 
     Font(Font &) = delete;
     Font(Font &&) = delete;

@@ -1,5 +1,6 @@
 #include "../../../../inc/engine/render/backend/font.hpp"
 #include <algorithm>
+#include <cstring>
 #include <freetype/freetype.h>
 #include <hb.h>
 #include <memory>
@@ -14,13 +15,15 @@ FontFace::FontFace(FT_Face &f, const FontSize &s) : face(f), size(s) {}
 FontFace::~FontFace() {
     if (buffer) {
         hb_buffer_destroy(buffer);
+        buffer = nullptr;
     }
     if (font) {
         hb_font_destroy(font);
+        font = nullptr;
     }
-
     if (face) {
         FT_Done_Face(face);
+        face = nullptr;
     }
 }
 
@@ -37,28 +40,77 @@ bool FontFace::init() {
     return true;
 }
 
-void FontFace::addStr(std::string_view str) {
+uint8_t *FontFace::createStr(std::string_view str, const glm::ivec2 &size) {
+    // TODO calc scale for font with texture
     if (buffer) {
         hb_buffer_destroy(buffer);
+        buffer = nullptr;
     }
+
+    buffer = hb_buffer_create();
     hb_buffer_add_utf8(buffer, str.data(), -1, 0, -1);
     hb_buffer_set_direction(buffer, HB_DIRECTION_LTR);
     hb_buffer_set_script(buffer, HB_SCRIPT_HAN);
     hb_buffer_set_language(buffer, hb_language_from_string("zh", -1));
-    std::vector<hb_feature_t> features;
-    hb_shape(font, buffer, features.data(), features.size());
+    // std::vector<hb_feature_t> features;
+    hb_shape(font, buffer, nullptr, 0);
 
     uint32_t count;
     hb_glyph_info_t *glyph_infos = hb_buffer_get_glyph_infos(buffer, &count);
     hb_glyph_position_t *glyph_positions =
         hb_buffer_get_glyph_positions(buffer, &count);
-    glm::ivec2 pos = {0, 0};
+
+    uint32_t base_line = face->size->metrics.ascender >> 6;
+    uint8_t *ret = new uint8_t[size.x * size.y];
+    memset(ret, 0, size.x * size.y);
+    glm::ivec2 cursor = {0, 0};
+    glm::ivec2 offset = {0, 0};
+    glm::ivec2 advance = {0, 0};
     for (uint32_t i = 0; i < count; ++i) {
-        unsigned int cluster = glyph_infos[i].cluster;
-        FT_Load_Char(face, cluster, FT_LOAD_RENDER);
-        pos.x += glyph_positions[i].x_offset;
-        pos.y += glyph_positions[i].y_offset;
+        hb_codepoint_t id = glyph_infos[i].codepoint;
+        offset.x = glyph_positions[i].x_offset >> 6;
+        offset.y = glyph_positions[i].y_offset >> 6;
+        advance.x = glyph_positions[i].x_advance >> 6;
+        advance.y = glyph_positions[i].y_advance >> 6;
+        FT_Error error = FT_Load_Glyph(face, id, FT_LOAD_DEFAULT);
+        if (error) {
+            spdlog::error("failed to load code point {}", id);
+            delete[] ret;
+            if (buffer) {
+                hb_buffer_destroy(buffer);
+                buffer = nullptr;
+            }
+            return nullptr;
+        }
+        error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+        if (error) {
+            spdlog::error("failed to render code point {}", id);
+            delete[] ret;
+            if (buffer) {
+                hb_buffer_destroy(buffer);
+                buffer = nullptr;
+            }
+            return nullptr;
+        }
+
+        for (uint32_t j = 0; j < face->glyph->bitmap.rows; ++j) {
+            memcpy(ret +
+                       (cursor.y + j + offset.y +
+                        (base_line - face->glyph->bitmap_top)) *
+                           size.x +
+                       cursor.x + offset.x,
+                   (uint8_t *)face->glyph->bitmap.buffer +
+                       j * face->glyph->bitmap.width,
+                   face->glyph->bitmap.width);
+        }
+
+        cursor += advance;
     }
+    if (buffer) {
+        hb_buffer_destroy(buffer);
+        buffer = nullptr;
+    }
+    return ret;
 }
 
 Font::Font() = default;
@@ -153,4 +205,13 @@ std::optional<const FT_GlyphSlot> Font::loadChar(std::string_view key,
     }
 }
 
+uint8_t *Font::loadStr(std::string_view key, std::string_view str,
+                       const glm::ivec2 &size) {
+    if (auto it = m_faces.find(std::string(key)); it != m_faces.end()) {
+        uint8_t *ret = it->second->createStr(str, size);
+        return ret;
+    } else {
+        return nullptr;
+    }
+}
 } // namespace cg::engine::backend

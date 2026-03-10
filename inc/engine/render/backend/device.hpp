@@ -5,6 +5,7 @@
 #include <ft2build.h>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
+#include <string_view>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include FT_FREETYPE_H
@@ -190,6 +191,8 @@ class Device {
     std::unique_ptr<Texture> createTextureArray(std::string_view path,
                                                 const glm::ivec2 &size);
     std::unique_ptr<Texture> createCharacter(const FT_GlyphSlot &slot);
+    std::unique_ptr<Texture> createText(const uint8_t *buff,
+                                        const glm::ivec2 &size = {500, 500});
 
     void waitIdle() { vkDeviceWaitIdle(m_device); }
 

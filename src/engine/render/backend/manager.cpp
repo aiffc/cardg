@@ -307,6 +307,34 @@ void RendererManager::addCharacters(const PipelineType &pipeline_name,
     }
 }
 
+void RendererManager::addText(const PipelineType &pipeline_name,
+                              std::string_view ttf_path, const FontSize &size,
+                              std::string_view str,
+                              const glm::ivec2 &text_size) {
+    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+        m_font->size(ttf_path, size);
+        uint8_t *buff = m_font->loadStr(ttf_path, str, text_size);
+        if (buff) {
+            auto texture = m_device.createText(buff, text_size);
+            if (texture) {
+                if (it->second->descriptor) {
+                    it->second->descriptor->updateTexture(*texture, 0, 0);
+                    it->second->texture = std::move(texture);
+                } else {
+                    spdlog::warn("no descriptor in pipeline {}",
+                                 dumpPipelineName(pipeline_name));
+                }
+            } else {
+                spdlog::warn("failed to create texture for pipeline {}",
+                             dumpPipelineName(pipeline_name));
+            }
+            delete[] buff;
+        }
+    } else {
+        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
+    }
+}
+
 void RendererManager::setViewport(float w, float h, float x, float y, float min,
                                   float max) {
     VkViewport v{

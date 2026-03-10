@@ -755,6 +755,36 @@ std::unique_ptr<Texture> Device::createCharacter(const FT_GlyphSlot &slot) {
     return ret;
 }
 
+std::unique_ptr<Texture> Device::createText(const uint8_t *buff,
+                                            const glm::ivec2 &size) {
+    if (buff == nullptr) {
+        return nullptr;
+    }
+    auto ret = std::make_unique<Texture>(*this);
+    VkDeviceSize texture_size = size.x * size.y;
+    auto buffer = createBuffer(texture_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    buffer->map(texture_size);
+    memcpy(buffer->data, buff, static_cast<size_t>(texture_size));
+    buffer->unmap();
+
+    internalCreateImage(
+        1, size.x, size.y, VK_FORMAT_R8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, ret->image, ret->memory);
+
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_UNDEFINED,
+                          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    ret->copyFrom(buffer->buffer, {size.x, size.y});
+    transitionImageLayout(ret->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    buffer.reset();
+
+    ret->init(VK_FORMAT_R8_UNORM);
+    return ret;
+}
+
 // TODO All texture size should be same
 std::unique_ptr<Texture>
 Device::createTextureArray(const std::vector<std::string_view> &paths) {
