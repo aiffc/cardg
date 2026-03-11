@@ -54,12 +54,20 @@ class Font final {
 
   private:
     [[nodiscard]] bool init();
+    void layout(std::string_view path, std::string_view doc,
+                const glm::ivec2 &texture_size, uint32_t line_max,
+                uint32_t column_offset, uint32_t row_offset,
+                uint32_t column_interval, uint32_t row_interval);
 
   public:
     Font();
     ~Font();
 
     void addFace(std::string_view path, const FontSize &size);
+    void addFace(std::string_view path, std::string_view str,
+                 const glm::ivec2 &size, uint32_t line_max = 10,
+                 uint32_t column_offset = 10, uint32_t row_offset = 10,
+                 uint32_t column_interval = 5, uint32_t row_interval = 5);
 
     void size(std::string_view key, FT_UInt h);
     void size(std::string_view key, const FontSize &size);
@@ -68,7 +76,9 @@ class Font final {
     std::optional<const FT_GlyphSlot> loadChar(std::string_view key,
                                                FT_ULong char_code);
     uint8_t *loadStr(std::string_view key, std::string_view str,
-                     const glm::ivec2 &size);
+                     const glm::ivec2 &size, uint32_t line_max = 10,
+                     uint32_t column_offset = 10, uint32_t row_offset = 10,
+                     uint32_t column_interval = 5, uint32_t row_interval = 5);
 
     Font(Font &) = delete;
     Font(Font &&) = delete;

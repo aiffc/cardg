@@ -157,7 +157,9 @@ class RendererManager final {
                        FT_ULong c);
     void addText(const PipelineType &pipeline_name, std::string_view ttf_path,
                  std::string_view str, const glm::ivec2 &text_size = {500, 500},
-                 uint32_t line_max = 10);
+                 uint32_t line_max = 10, uint32_t column_offset = 10,
+                 uint32_t row_offset = 10, uint32_t column_interval = 5,
+                 uint32_t row_interval = 5);
     template <typename T>
     void mapUniform(const PipelineType &pipeline_name, const T &data) {
         if (auto it = m_container.find(pipeline_name);

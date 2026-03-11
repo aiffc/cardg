@@ -309,11 +309,13 @@ void RendererManager::addCharacters(const PipelineType &pipeline_name,
 
 void RendererManager::addText(const PipelineType &pipeline_name,
                               std::string_view ttf_path, std::string_view str,
-                              const glm::ivec2 &text_size, uint32_t line_max) {
+                              const glm::ivec2 &text_size, uint32_t line_max,
+                              uint32_t column_offset, uint32_t row_offset,
+                              uint32_t column_interval, uint32_t row_interval) {
     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        cg::engine::backend::FontSize size{text_size.x / line_max, 0};
-        m_font->size(ttf_path, size);
-        uint8_t *buff = m_font->loadStr(ttf_path, str, text_size);
+        uint8_t *buff =
+            m_font->loadStr(ttf_path, str, text_size, line_max, column_offset,
+                            row_offset, column_interval, row_interval);
         if (buff) {
             auto texture = m_device.createText(buff, text_size);
             if (texture) {
@@ -329,6 +331,8 @@ void RendererManager::addText(const PipelineType &pipeline_name,
                              dumpPipelineName(pipeline_name));
             }
             delete[] buff;
+        } else {
+            spdlog::error("failed to create text buffer");
         }
     } else {
         spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));

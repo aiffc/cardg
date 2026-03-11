@@ -60,6 +60,13 @@ uint8_t *FontFace::createStr(std::string_view str, const glm::ivec2 &size) {
     uint32_t base_line = face->size->metrics.ascender >> 6;
     uint8_t *ret = new uint8_t[size.x * size.y];
     memset(ret, 0, size.x * size.y);
+    // dump
+    // spdlog::info("size {} {}", format.size.w, format.size.h);
+    // spdlog::info("interval {} {}", format.column_interval,
+    // format.row_interval); spdlog::info("row_offset {} {}", format.top_offset,
+    // format.botton_offset); spdlog::info("column_offset {} {}",
+    // format.left_offset,
+    //              format.right_offset);
     glm::ivec2 cursor = {format.top_offset, format.botton_offset};
     glm::ivec2 offset = {0, 0};
     glm::ivec2 advance = {0, 0};
@@ -125,6 +132,33 @@ Font::~Font() {
     spdlog::info("font quit done");
 };
 
+void Font::layout(std::string_view path, std::string_view doc,
+                  const glm::ivec2 &texture_size, uint32_t line_max,
+                  uint32_t column_offset, uint32_t row_offset,
+                  uint32_t column_interval, uint32_t row_interval) {
+    if (auto it = m_faces.find(std::string(path)); it != m_faces.end()) {
+        uint32_t max_width = texture_size.x - column_offset * 2;
+        uint32_t max_height = texture_size.y - row_offset * 2;
+        FontSize character_size = {
+            max_width / line_max - column_interval,
+            max_width / line_max - column_interval - row_interval,
+        };
+        uint32_t line = doc.size() / line_max;
+        if (max_height < line * character_size.h) {
+            character_size.h = max_height / line - row_interval;
+        }
+        size(path, character_size);
+        it->second->format.botton_offset = row_offset;
+        it->second->format.top_offset = row_offset;
+        it->second->format.left_offset = column_offset;
+        it->second->format.right_offset = column_offset;
+        it->second->format.row_interval = row_interval;
+        it->second->format.column_interval = column_interval;
+    } else {
+        spdlog::error("unable to layout {}", path);
+    }
+}
+
 bool Font::init() {
     FT_Error error;
     error = FT_Init_FreeType(&m_ft);
@@ -134,6 +168,42 @@ bool Font::init() {
         return false;
     }
     return true;
+}
+
+void Font::addFace(std::string_view path, std::string_view str,
+                   const glm::ivec2 &size, uint32_t line_max,
+                   uint32_t column_offset, uint32_t row_offset,
+                   uint32_t column_interval, uint32_t row_interval) {
+    if (auto it = m_faces.find(std::string(path)); it != m_faces.end()) {
+        layout(path, str, size, line_max, column_offset, row_offset,
+               column_interval, row_interval);
+    } else {
+        FT_Face face;
+        FT_Error error;
+        error = FT_New_Face(m_ft, path.data(), 0, &face);
+        if (error) {
+            spdlog::warn("failed to load ttf file {}", path);
+            return;
+        }
+        FontFormat format{
+            .size = {0, 0},
+            .left_offset = 0,
+            .right_offset = 0,
+            .top_offset = 0,
+            .botton_offset = 0,
+            .column_interval = 0,
+            .row_interval = 0,
+            .line_max = 0,
+        };
+        auto ptr = std::make_unique<FontFace>(face, format);
+        if (ptr && ptr->init()) {
+            m_faces.emplace(std::string(path), std::move(ptr));
+            layout(path, str, size, line_max, column_offset, row_offset,
+                   column_interval, row_interval);
+        } else {
+            spdlog::error("{} init failed", path);
+        }
+    }
 }
 
 void Font::addFace(std::string_view path, const FontSize &font_size) {
@@ -231,11 +301,24 @@ std::optional<const FT_GlyphSlot> Font::loadChar(std::string_view key,
 }
 
 uint8_t *Font::loadStr(std::string_view key, std::string_view str,
-                       const glm::ivec2 &size) {
+                       const glm::ivec2 &size, uint32_t line_max,
+                       uint32_t column_offset, uint32_t row_offset,
+                       uint32_t column_interval, uint32_t row_interval) {
     if (auto it = m_faces.find(std::string(key)); it != m_faces.end()) {
+        layout(key, str, size, line_max, column_offset, row_offset,
+               column_interval, row_interval);
         uint8_t *ret = it->second->createStr(str, size);
         return ret;
     } else {
+        // ugly
+        addFace(key, str, size, line_max, column_offset, row_offset,
+                column_interval, row_interval);
+        if (auto it = m_faces.find(std::string(key)); it != m_faces.end()) {
+            layout(key, str, size, line_max, column_offset, row_offset,
+                   column_interval, row_interval);
+            uint8_t *ret = it->second->createStr(str, size);
+            return ret;
+        }
         return nullptr;
     }
 }
