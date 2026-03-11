@@ -8,6 +8,7 @@
 #include "spdlog/spdlog.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
+#include <SDL3/SDL_init.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -38,7 +39,7 @@ bool App::initAppInfo() {
 }
 
 bool App::initSDL() {
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         spdlog::error("failed to init sdl {}", SDL_GetError());
         return false;
     }

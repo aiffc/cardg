@@ -21,21 +21,91 @@ class App final {
     std::unique_ptr<SceneManager> m_scene_manager;
 
   private:
+    /**
+     * @brief
+     * set app meta
+     *
+     * @return bool
+     * false: failed
+     * true:  success
+     */
     bool initAppInfo();
+    /**
+     * @brief
+     * init SDL things, for now just init audio & vedio
+     *
+     * @return
+     * false: failed
+     * true:  success
+     */
     bool initSDL();
 
   public:
     App();
     ~App();
 
+    /**
+     * @brief
+     * init internal handler like time renderer
+     * input_manager context scene_manager;
+     *
+     * @return
+     * false: failed
+     * true:  success
+     */
     [[nodiscard]] bool init();
+    /**
+     * @brief
+     * app quit function
+     *
+     */
     void deinit();
+    /**
+     * @brief
+     * app render function, call a time ever frame
+     *
+     * @return
+     * false: failed
+     * true:  success
+     */
     bool render();
+    /**
+     * @brief
+     * app update function, call a time  frame
+     *
+     * @return
+     * false: failed, maybe some error
+     * true:  success
+     */
     bool update();
+    /**
+     * @brief
+     * app event function
+     *
+     * @return
+     * false: app quit
+     * true:  app continue
+     */
     bool event(const SDL_Event *);
 
+    /**
+     * @brief
+     * push a scene to app
+     *
+     * @param [scene] the scene ready push to application
+     */
     void pushScene(std::unique_ptr<Scene> &&scene);
+    /**
+     * @brief
+     * clear current scenes and push a new scene to app
+     *
+     * @param [scene] the scene ready push to application
+     */
     void replaceScene(std::unique_ptr<Scene> &&scene);
+    /**
+     * @brief
+     * remove the top scene from current scene
+     */
     void popScene();
 
     App(App &) = delete;

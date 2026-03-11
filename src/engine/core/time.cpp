@@ -24,7 +24,6 @@ void Time::init() {
 void Time::deinit() { spdlog::info("time manager quit"); }
 
 void Time::limit(uint64_t l2s_interval) {
-
     uint64_t interval = static_cast<uint64_t>(m_frame_interval * 1000000000);
     if (l2s_interval < interval) {
         uint64_t delay_time = interval - l2s_interval;

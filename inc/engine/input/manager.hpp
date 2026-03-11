@@ -49,17 +49,70 @@ class InputManager final {
     InputManager() = default;
     ~InputManager() = default;
 
+    /**
+     * @brief
+     * check app should quit
+     *
+     * @return  bool
+     * false: app continue
+     * true:  app quit
+     */
     bool shouldQuit() const { return m_quit; }
+    /**
+     * @brief
+     * quit setter function
+     *
+     * @param [p] is quit
+     */
     void setQuit(bool p = true) { m_quit = p; }
 
+    /**
+     * @brief
+     * is current window resized
+     *
+     * @return bool
+     * false: window not resized
+     * true:  window resized
+     */
     bool resized() const { return m_resized; }
 
-    void update(const SDL_Event &);
+    /**
+     * @brief
+     * event update function
+     *
+     * @param [event] current event from sdl
+     */
+    void update(const SDL_Event &event);
 
-    bool isActionPress(const std::string &) const;
-    bool isActionHeld(const std::string &) const;
-    bool isActionRelease(const std::string &) const;
+    /**
+     * @brief
+     * check action is pressed
+     *
+     * @param [action] the action you want check
+     */
+    bool isActionPress(const std::string &action) const;
+    /**
+     * @brief
+     * check action is held
+     *
+     * @param [action] the action you want check
+     */
+    bool isActionHeld(const std::string &action) const;
+    /**
+     * @brief
+     * check action is release
+     *
+     * @param [action] the action you want check
+     */
+    bool isActionRelease(const std::string &action) const;
 
+    /**
+     * @brief
+     * get current mouse position
+     *
+     * @ret glm::vec2
+     * current mouse position
+     */
     const glm::vec2 &getMousePos() const { return m_mouse_pos; }
 
     InputManager(InputManager &) = delete;
