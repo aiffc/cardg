@@ -41,10 +41,6 @@ set(SOURCE_FILES
   src/engine/input/manager.cpp
   src/engine/scene/scene.cpp
   src/engine/scene/manager.cpp
-  src/card.cpp
-  src/character.cpp
-  src/factory.cpp
-  src/map.cpp
   tests/test_scene.cpp
   tests/main.cpp
 )

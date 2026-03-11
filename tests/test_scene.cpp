@@ -1,8 +1,6 @@
 #include "test_scene.hpp"
 #include "../inc/engine/render/backend/font.hpp"
 #include "../inc/engine/render/backend/manager.hpp"
-#include "../inc/map.hpp"
-#include <memory>
 #include <spdlog/spdlog.h>
 
 void TestScene::init(cg::engine::Context &context) {
