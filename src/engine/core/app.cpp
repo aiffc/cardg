@@ -9,6 +9,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
+#include <SDL3/SDL_mouse.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -43,6 +44,10 @@ bool App::initSDL() {
         spdlog::error("failed to init sdl {}", SDL_GetError());
         return false;
     }
+    if (!SDL_HideCursor()) {
+        spdlog::warn("failed to hide cursor {}", SDL_GetError());
+    }
+
     return true;
 }
 

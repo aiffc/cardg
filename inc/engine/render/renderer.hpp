@@ -56,6 +56,12 @@ class Renderer final {
     init(VkSampleCountFlagBits sample_count = VK_SAMPLE_COUNT_1_BIT);
     void quit();
 
+    const glm::ivec2 &windowSize() const { return m_window_size; }
+    glm::vec2 windowSizef() const {
+        return {static_cast<float>(m_window_size.x),
+                static_cast<float>(m_window_size.y)};
+    }
+
     cg::engine::backend::RendererManager &operator*() { return *m_manager; }
     cg::engine::backend::RendererManager &manager() { return *m_manager; }
     // cg::engine::backend::Font &font() { return *m_font; }

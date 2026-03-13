@@ -807,8 +807,16 @@ Device::createTextureArray(const std::vector<std::string_view> &paths) {
     buffer->map(texture_size);
     int i = 0;
     for (const auto &path : paths) {
+
         pixels =
             stbi_load(path.data(), &width, &height, &channels, STBI_rgb_alpha);
+        // dump
+        // spdlog::info("{} {} {} {}", path, width, height, channels);
+        if (!pixels) {
+            spdlog::error("failed to load texture {}", paths[0]);
+            buffer->unmap();
+            return nullptr;
+        }
         memcpy((uint8_t *)buffer->data + i * single_size, pixels,
                static_cast<size_t>(single_size));
         stbi_image_free(pixels);
