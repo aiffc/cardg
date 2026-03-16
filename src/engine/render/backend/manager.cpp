@@ -1,6 +1,7 @@
 #include "../../../../inc/engine/render/backend/manager.hpp"
 #include "../../../../inc/engine/render/backend/device.hpp"
 #include "../../../../inc/engine/render/backend/font.hpp"
+#include "../../../../inc/engine/world/tile.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -188,6 +189,51 @@ bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
     return true;
 }
 
+bool RendererManager::initTile(const glm::vec2 &size) {
+    auto base = std::make_unique<ManagerHashContainer>();
+
+    base->descriptor = std::make_unique<Descriptor>(m_device);
+    base->descriptor->addDescriptorBinding(
+        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        VK_SHADER_STAGE_FRAGMENT_BIT);
+    base->descriptor->addDescriptorBinding(
+        1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+        VK_SHADER_STAGE_FRAGMENT_BIT);
+    if (!base->descriptor->init()) {
+        spdlog::error("failed to create descriptor things");
+        return false;
+    }
+    base->layout = std::make_unique<Layout>(m_device);
+    if (!base->layout->init({**base->descriptor})) {
+        spdlog::error("failed to create pipeline layout");
+        return false;
+    }
+    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+                              "../shaders/texture_array/vert.spv");
+    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+                              "../shaders/texture_array/frag.spv");
+    base->pipeline->addViewport(size.x, size.y);
+    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+    base->pipeline->addColorBlendAttachemt();
+    base->pipeline->addBinding(0, sizeof(cg::engine::TiledV));
+    base->pipeline->addAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT,
+                                 offsetof(cg::engine::TiledV, pos));
+    base->pipeline->addAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT,
+                                 offsetof(cg::engine::TiledV, coord));
+    if (!base->pipeline->init(**base->layout)) {
+        spdlog::error("failed to create base pipeline");
+        return false;
+    }
+
+    base->duniforms =
+        m_device.createDynamicUniformBuffer<cg::engine::TiledU>(10000);
+    base->descriptor->updateBuffer(*base->duniforms, 1, 0,
+                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+    m_container.emplace(PipelineType::Tile, std::move(base));
+    return true;
+}
+
 bool RendererManager::initFont(const glm::vec2 &size) {
     auto base = std::make_unique<ManagerHashContainer>();
 
@@ -253,6 +299,9 @@ bool RendererManager::init(const glm::vec2 &size) {
         return false;
     }
     if (!initMouse(size)) {
+        return false;
+    }
+    if (!initTile(size)) {
         return false;
     }
     return true;

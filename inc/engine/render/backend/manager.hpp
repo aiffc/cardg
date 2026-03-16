@@ -75,6 +75,7 @@ enum class PipelineType {
     BaseTextureArray,
     Mouse,
     Font,
+    Tile,
 };
 
 static inline std::string dumpPipelineName(const PipelineType &p) {
@@ -87,6 +88,8 @@ static inline std::string dumpPipelineName(const PipelineType &p) {
         return "Base Texture Array";
     case PipelineType::Mouse:
         return "Mouse";
+    case PipelineType::Tile:
+        return "Tile";
     default:;
         return "unknow";
     }
@@ -117,6 +120,7 @@ class RendererManager final {
     [[nodiscard]] bool initBaseTextureArrayPipeline(const glm::vec2 &size);
     [[nodiscard]] bool initFont(const glm::vec2 &size);
     [[nodiscard]] bool initMouse(const glm::vec2 &size);
+    [[nodiscard]] bool initTile(const glm::vec2 &size);
     [[nodiscard]] bool init(const glm::vec2 &size);
     void resize(const glm::vec2 &v) { m_window_size = v; }
 
