@@ -12,436 +12,444 @@
 
 namespace cg::engine::backend {
 
-ManagerHashContainer::ManagerHashContainer() = default;
-ManagerHashContainer::~ManagerHashContainer() = default;
-
 RendererManager::RendererManager(Device &device) : m_device(device) {}
 
 RendererManager::~RendererManager() = default;
 
-bool RendererManager::initBasePipeline(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init()) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/base/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/base/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::Base));
-    base->pipeline->addAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT,
-                                 offsetof(cg::engine::buffer::Base, pos));
-    base->pipeline->addAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT,
-                                 offsetof(cg::engine::buffer::Base, color));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
-    m_container.emplace(PipelineType::Base, std::move(base));
-    return true;
-}
+// bool RendererManager::initBasePipeline(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init()) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/base/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/base/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::buffer::Base));
+//     base->pipeline->addAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT,
+//                                  offsetof(cg::engine::buffer::Base, pos));
+//     base->pipeline->addAttribute(1, 0, VK_FORMAT_R32G32B32_SFLOAT,
+//                                  offsetof(cg::engine::buffer::Base, color));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
+//     m_container.emplace(PipelineType::Base, std::move(base));
+//     return true;
+// }
 
-bool RendererManager::initBaseTexturePipeline(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
+// bool RendererManager::initBaseTexturePipeline(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
 
-    base->descriptor = std::make_unique<Descriptor>(m_device);
-    base->descriptor->addDescriptorBinding(
-        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
-    if (!base->descriptor->init()) {
-        spdlog::error("failed to create descriptor things");
-        return false;
-    }
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init({**base->descriptor})) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/texture/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/texture/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
-    base->pipeline->addAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, pos));
-    base->pipeline->addAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, coord));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
-    m_container.emplace(PipelineType::BaseTexture, std::move(base));
-    return true;
-}
+//     base->descriptor = std::make_unique<Descriptor>(m_device);
+//     base->descriptor->addDescriptorBinding(
+//         0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
+//     if (!base->descriptor->init()) {
+//         spdlog::error("failed to create descriptor things");
+//         return false;
+//     }
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init({**base->descriptor})) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/texture/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/texture/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
+//     base->pipeline->addAttribute(
+//         0, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, pos));
+//     base->pipeline->addAttribute(
+//         1, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, coord));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
+//     m_container.emplace(PipelineType::BaseTexture, std::move(base));
+//     return true;
+// }
 
-bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
+// bool RendererManager::initBaseTextureArrayPipeline(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
 
-    base->descriptor = std::make_unique<Descriptor>(m_device);
-    base->descriptor->addDescriptorBinding(
-        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
-    base->descriptor->addDescriptorBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                           VK_SHADER_STAGE_FRAGMENT_BIT);
-    base->descriptor->addDescriptorBinding(
-        2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-        VK_SHADER_STAGE_VERTEX_BIT);
-    if (!base->descriptor->init()) {
-        spdlog::error("failed to create descriptor things");
-        return false;
-    }
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init({**base->descriptor})) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/texture_array/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/texture_array/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
-    base->pipeline->addAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, pos));
-    base->pipeline->addAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, coord));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
+//     base->descriptor = std::make_unique<Descriptor>(m_device);
+//     base->descriptor->addDescriptorBinding(
+//         0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
+//     base->descriptor->addDescriptorBinding(1,
+//     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+//                                            VK_SHADER_STAGE_FRAGMENT_BIT);
+//     base->descriptor->addDescriptorBinding(
+//         2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+//         VK_SHADER_STAGE_VERTEX_BIT);
+//     if (!base->descriptor->init()) {
+//         spdlog::error("failed to create descriptor things");
+//         return false;
+//     }
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init({**base->descriptor})) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/texture_array/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/texture_array/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
+//     base->pipeline->addAttribute(
+//         0, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, pos));
+//     base->pipeline->addAttribute(
+//         1, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, coord));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
 
-    base->uniforms =
-        m_device.createUniformBuffer<cg::engine::buffer::BaseTextureArrayU>();
-    base->descriptor->updateBuffer(*base->uniforms, 1, 0,
-                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    base->duniforms =
-        m_device
-            .createDynamicUniformBuffer<cg::engine::buffer::BaseTextureArrayDU>(
-                3);
-    base->descriptor->updateBuffer(*base->duniforms, 2, 0,
-                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
-    m_container.emplace(PipelineType::BaseTextureArray, std::move(base));
-    return true;
-}
+//     base->uniforms =
+//         m_device.createUniformBuffer<cg::engine::buffer::BaseTextureArrayU>();
+//     base->descriptor->updateBuffer(*base->uniforms, 1, 0,
+//                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+//     base->duniforms =
+//         m_device
+//             .createDynamicUniformBuffer<cg::engine::buffer::BaseTextureArrayDU>(
+//                 3);
+//     base->descriptor->updateBuffer(*base->duniforms, 2, 0,
+//                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+//     m_container.emplace(PipelineType::BaseTextureArray, std::move(base));
+//     return true;
+// }
 
-[[nodiscard]] bool RendererManager::initMouse(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
+// [[nodiscard]] bool RendererManager::initMouse(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
 
-    base->descriptor = std::make_unique<Descriptor>(m_device);
-    base->descriptor->addDescriptorBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                           VK_SHADER_STAGE_VERTEX_BIT);
-    base->descriptor->addDescriptorBinding(
-        1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
+//     base->descriptor = std::make_unique<Descriptor>(m_device);
+//     base->descriptor->addDescriptorBinding(0,
+//     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+//                                            VK_SHADER_STAGE_VERTEX_BIT);
+//     base->descriptor->addDescriptorBinding(
+//         1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
 
-    if (!base->descriptor->init()) {
-        spdlog::error("failed to create descriptor things");
-        return false;
-    }
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init({**base->descriptor})) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/mouse/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/mouse/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::MouseVertex));
-    base->pipeline->addAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::MouseVertex, pos));
-    base->pipeline->addAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::MouseVertex, coord));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
+//     if (!base->descriptor->init()) {
+//         spdlog::error("failed to create descriptor things");
+//         return false;
+//     }
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init({**base->descriptor})) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/mouse/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/mouse/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::buffer::MouseVertex));
+//     base->pipeline->addAttribute(
+//         0, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::MouseVertex, pos));
+//     base->pipeline->addAttribute(
+//         1, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::MouseVertex, coord));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
 
-    base->uniforms =
-        m_device.createUniformBuffer<cg::engine::buffer::CommonUniform>();
-    base->descriptor->updateBuffer(*base->uniforms, 0, 0,
-                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+//     base->uniforms =
+//         m_device.createUniformBuffer<cg::engine::buffer::CommonUniform>();
+//     base->descriptor->updateBuffer(*base->uniforms, 0, 0,
+//                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-    m_container.emplace(PipelineType::Mouse, std::move(base));
-    return true;
-}
+//     m_container.emplace(PipelineType::Mouse, std::move(base));
+//     return true;
+// }
 
-bool RendererManager::initTile(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
+// bool RendererManager::initTile(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
 
-    base->descriptor = std::make_unique<Descriptor>(m_device);
-    base->descriptor->addDescriptorBinding(
-        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
-    base->descriptor->addDescriptorBinding(
-        1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
-    if (!base->descriptor->init()) {
-        spdlog::error("failed to create descriptor things");
-        return false;
-    }
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init({**base->descriptor})) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/texture_array/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/texture_array/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::TiledV));
-    base->pipeline->addAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT,
-                                 offsetof(cg::engine::TiledV, pos));
-    base->pipeline->addAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT,
-                                 offsetof(cg::engine::TiledV, coord));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
+//     base->descriptor = std::make_unique<Descriptor>(m_device);
+//     base->descriptor->addDescriptorBinding(
+//         0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
+//     base->descriptor->addDescriptorBinding(
+//         1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
+//     if (!base->descriptor->init()) {
+//         spdlog::error("failed to create descriptor things");
+//         return false;
+//     }
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init({**base->descriptor})) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/texture_array/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/texture_array/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::TiledV));
+//     base->pipeline->addAttribute(0, 0, VK_FORMAT_R32G32_SFLOAT,
+//                                  offsetof(cg::engine::TiledV, pos));
+//     base->pipeline->addAttribute(1, 0, VK_FORMAT_R32G32_SFLOAT,
+//                                  offsetof(cg::engine::TiledV, coord));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
 
-    base->duniforms =
-        m_device.createDynamicUniformBuffer<cg::engine::TiledU>(10000);
-    base->descriptor->updateBuffer(*base->duniforms, 1, 0,
-                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
-    m_container.emplace(PipelineType::Tile, std::move(base));
-    return true;
-}
+//     base->duniforms =
+//         m_device.createDynamicUniformBuffer<cg::engine::TiledU>(10000);
+//     base->descriptor->updateBuffer(*base->duniforms, 1, 0,
+//                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC);
+//     m_container.emplace(PipelineType::Tile, std::move(base));
+//     return true;
+// }
 
-bool RendererManager::initFont(const glm::vec2 &size) {
-    auto base = std::make_unique<ManagerHashContainer>();
+// bool RendererManager::initFont(const glm::vec2 &size) {
+//     auto base = std::make_unique<ManagerHashContainer>();
 
-    base->descriptor = std::make_unique<Descriptor>(m_device);
-    base->descriptor->addDescriptorBinding(
-        0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        VK_SHADER_STAGE_FRAGMENT_BIT);
-    base->descriptor->addDescriptorBinding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                           VK_SHADER_STAGE_FRAGMENT_BIT);
-    if (!base->descriptor->init()) {
-        spdlog::error("failed to create descriptor things");
-        return false;
-    }
-    base->layout = std::make_unique<Layout>(m_device);
-    if (!base->layout->init({**base->descriptor})) {
-        spdlog::error("failed to create pipeline layout");
-        return false;
-    }
-    base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
-    base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
-                              "../shaders/font/vert.spv");
-    base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
-                              "../shaders/font/frag.spv");
-    base->pipeline->addViewport(size.x, size.y);
-    base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
-    base->pipeline->addColorBlendAttachemt();
-    base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
-    base->pipeline->addAttribute(
-        0, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, pos));
-    base->pipeline->addAttribute(
-        1, 0, VK_FORMAT_R32G32_SFLOAT,
-        offsetof(cg::engine::buffer::BaseTexture, coord));
-    if (!base->pipeline->init(**base->layout)) {
-        spdlog::error("failed to create base pipeline");
-        return false;
-    }
-    base->uniforms = m_device.createUniformBuffer<cg::engine::buffer::FontU>();
-    base->descriptor->updateBuffer(*base->uniforms, 1, 0,
-                                   VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-    m_container.emplace(PipelineType::Font, std::move(base));
-    return true;
-}
+//     base->descriptor = std::make_unique<Descriptor>(m_device);
+//     base->descriptor->addDescriptorBinding(
+//         0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+//         VK_SHADER_STAGE_FRAGMENT_BIT);
+//     base->descriptor->addDescriptorBinding(1,
+//     VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+//                                            VK_SHADER_STAGE_FRAGMENT_BIT);
+//     if (!base->descriptor->init()) {
+//         spdlog::error("failed to create descriptor things");
+//         return false;
+//     }
+//     base->layout = std::make_unique<Layout>(m_device);
+//     if (!base->layout->init({**base->descriptor})) {
+//         spdlog::error("failed to create pipeline layout");
+//         return false;
+//     }
+//     base->pipeline = std::make_unique<GraphicsPipeline>(m_device);
+//     base->pipeline->addShader(VK_SHADER_STAGE_VERTEX_BIT,
+//                               "../shaders/font/vert.spv");
+//     base->pipeline->addShader(VK_SHADER_STAGE_FRAGMENT_BIT,
+//                               "../shaders/font/frag.spv");
+//     base->pipeline->addViewport(size.x, size.y);
+//     base->pipeline->addScissor((uint32_t)size.x, (uint32_t)size.y);
+//     base->pipeline->addColorBlendAttachemt();
+//     base->pipeline->addBinding(0, sizeof(cg::engine::buffer::BaseTexture));
+//     base->pipeline->addAttribute(
+//         0, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, pos));
+//     base->pipeline->addAttribute(
+//         1, 0, VK_FORMAT_R32G32_SFLOAT,
+//         offsetof(cg::engine::buffer::BaseTexture, coord));
+//     if (!base->pipeline->init(**base->layout)) {
+//         spdlog::error("failed to create base pipeline");
+//         return false;
+//     }
+//     base->uniforms =
+//     m_device.createUniformBuffer<cg::engine::buffer::FontU>();
+//     base->descriptor->updateBuffer(*base->uniforms, 1, 0,
+//                                    VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+//     m_container.emplace(PipelineType::Font, std::move(base));
+//     return true;
+// }
 
 bool RendererManager::init(const glm::vec2 &size) {
     m_window_size = size;
     // init font
-    m_font = std::make_unique<cg::engine::backend::Font>();
-    if (!m_font->init()) {
-        spdlog::error("unable to init font");
-        return false;
-    }
-    if (!initBasePipeline(size)) {
-        return false;
-    }
-    if (!initBaseTexturePipeline(size)) {
-        return false;
-    }
-    if (!initBaseTextureArrayPipeline(size)) {
-        return false;
-    }
-    if (!initFont(size)) {
-        return false;
-    }
-    if (!initMouse(size)) {
-        return false;
-    }
-    if (!initTile(size)) {
-        return false;
-    }
+    // m_font = std::make_unique<cg::engine::backend::Font>();
+    // if (!m_font->init()) {
+    //     spdlog::error("unable to init font");
+    //     return false;
+    // }
+    // if (!initBasePipeline(size)) {
+    //     return false;
+    // }
+    // if (!initBaseTexturePipeline(size)) {
+    //     return false;
+    // }
+    // if (!initBaseTextureArrayPipeline(size)) {
+    //     return false;
+    // }
+    // if (!initFont(size)) {
+    //     return false;
+    // }
+    // if (!initMouse(size)) {
+    //     return false;
+    // }
+    // if (!initTile(size)) {
+    //     return false;
+    // }
     return true;
 }
 
-void RendererManager::addIndexBuffer(const PipelineType &pipeline_name,
-                                     const std::vector<uint32_t> &data) {
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        auto buff = m_device.createUsageBuffer<uint32_t>(
-            data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-        if (buff) {
-            it->second->ibuffers = std::move(buff);
-        } else {
-            spdlog::warn("failed to create index buffer for {}",
-                         dumpPipelineName(pipeline_name));
-        }
+// void RendererManager::addIndexBuffer(const PipelineType &pipeline_name,
+//                                      const std::vector<uint32_t> &data) {
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         auto buff = m_device.createUsageBuffer<uint32_t>(
+//             data, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+//         if (buff) {
+//             it->second->ibuffers = std::move(buff);
+//         } else {
+//             spdlog::warn("failed to create index buffer for {}",
+//                          dumpPipelineName(pipeline_name));
+//         }
 
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
-void RendererManager::addTexture(const PipelineType &pipeline_name,
-                                 std::string_view texture_path,
-                                 uint32_t binding) {
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        auto texture = m_device.createTexture(texture_path);
-        if (texture) {
-            if (it->second->descriptor) {
-                it->second->descriptor->updateTexture(*texture, binding, 0);
-                it->second->texture = std::move(texture);
-            } else {
-                spdlog::warn("no descriptor in pipeline {}",
-                             dumpPipelineName(pipeline_name));
-            }
-        } else {
-            spdlog::warn("failed to create texture for pipeline {}",
-                         dumpPipelineName(pipeline_name));
-        }
+// void RendererManager::addTexture(const PipelineType &pipeline_name,
+//                                  std::string_view texture_path,
+//                                  uint32_t binding) {
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         auto texture = m_device.createTexture(texture_path);
+//         if (texture) {
+//             if (it->second->descriptor) {
+//                 it->second->descriptor->updateTexture(*texture, binding, 0);
+//                 it->second->texture = std::move(texture);
+//             } else {
+//                 spdlog::warn("no descriptor in pipeline {}",
+//                              dumpPipelineName(pipeline_name));
+//             }
+//         } else {
+//             spdlog::warn("failed to create texture for pipeline {}",
+//                          dumpPipelineName(pipeline_name));
+//         }
 
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
-void RendererManager::addTextureArray(
-    const PipelineType &pipeline_name,
-    const std::vector<std::string_view> &texture_paths, uint32_t binding) {
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        auto texture = m_device.createTextureArray(texture_paths);
-        if (texture) {
-            it->second->descriptor->updateTexture(*texture, binding, 0);
-            it->second->texture = std::move(texture);
-        } else {
-            spdlog::warn("failed to create texture array for pipeline {}",
-                         dumpPipelineName(pipeline_name));
-        }
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+// void RendererManager::addTextureArray(
+//     const PipelineType &pipeline_name,
+//     const std::vector<std::string_view> &texture_paths, uint32_t binding) {
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         auto texture = m_device.createTextureArray(texture_paths);
+//         if (texture) {
+//             it->second->descriptor->updateTexture(*texture, binding, 0);
+//             it->second->texture = std::move(texture);
+//         } else {
+//             spdlog::warn("failed to create texture array for pipeline {}",
+//                          dumpPipelineName(pipeline_name));
+//         }
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
-void RendererManager::addTextureArray(const PipelineType &pipeline_name,
-                                      std::string_view texture_path,
-                                      const glm::ivec2 &size,
-                                      uint32_t binding) {
+// void RendererManager::addTextureArray(const PipelineType &pipeline_name,
+//                                       std::string_view texture_path,
+//                                       const glm::ivec2 &size,
+//                                       uint32_t binding) {
 
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        auto texture = m_device.createTextureArray(texture_path, size);
-        if (texture) {
-            it->second->descriptor->updateTexture(*texture, binding, 0);
-            it->second->texture = std::move(texture);
-        } else {
-            spdlog::warn("failed to create texture array for pipeline {}",
-                         dumpPipelineName(pipeline_name));
-        }
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         auto texture = m_device.createTextureArray(texture_path, size);
+//         if (texture) {
+//             it->second->descriptor->updateTexture(*texture, binding, 0);
+//             it->second->texture = std::move(texture);
+//         } else {
+//             spdlog::warn("failed to create texture array for pipeline {}",
+//                          dumpPipelineName(pipeline_name));
+//         }
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
-void RendererManager::addCharacters(const PipelineType &pipeline_name,
-                                    std::string_view ttf_path,
-                                    const FontSize &size, FT_ULong c,
-                                    uint32_t binding) {
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        m_font->size(ttf_path, size);
-        auto slot = m_font->loadChar(ttf_path, c);
-        if (slot != std::nullopt) {
-            auto texture = m_device.createCharacter(slot.value());
-            if (texture) {
-                if (it->second->descriptor) {
-                    it->second->descriptor->updateTexture(*texture, binding, 0);
-                    it->second->texture = std::move(texture);
-                } else {
-                    spdlog::warn("no descriptor in pipeline {}",
-                                 dumpPipelineName(pipeline_name));
-                }
-            } else {
-                spdlog::warn("failed to create texture for pipeline {}",
-                             dumpPipelineName(pipeline_name));
-            }
-        }
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+// void RendererManager::addCharacters(const PipelineType &pipeline_name,
+//                                     std::string_view ttf_path,
+//                                     const FontSize &size, FT_ULong c,
+//                                     uint32_t binding) {
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         m_font->size(ttf_path, size);
+//         auto slot = m_font->loadChar(ttf_path, c);
+//         if (slot != std::nullopt) {
+//             auto texture = m_device.createCharacter(slot.value());
+//             if (texture) {
+//                 if (it->second->descriptor) {
+//                     it->second->descriptor->updateTexture(*texture, binding,
+//                     0); it->second->texture = std::move(texture);
+//                 } else {
+//                     spdlog::warn("no descriptor in pipeline {}",
+//                                  dumpPipelineName(pipeline_name));
+//                 }
+//             } else {
+//                 spdlog::warn("failed to create texture for pipeline {}",
+//                              dumpPipelineName(pipeline_name));
+//             }
+//         }
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
-void RendererManager::addText(const PipelineType &pipeline_name,
-                              std::string_view ttf_path, std::string_view str,
-                              const glm::ivec2 &text_size, uint32_t line_max,
-                              uint32_t column_offset, uint32_t row_offset,
-                              uint32_t column_interval, uint32_t row_interval,
-                              uint32_t binding) {
-    if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
-        uint8_t *buff =
-            m_font->loadStr(ttf_path, str, text_size, line_max, column_offset,
-                            row_offset, column_interval, row_interval);
-        if (buff) {
-            auto texture = m_device.createText(buff, text_size);
-            if (texture) {
-                if (it->second->descriptor) {
-                    it->second->descriptor->updateTexture(*texture, binding, 0);
-                    it->second->texture = std::move(texture);
-                } else {
-                    spdlog::warn("no descriptor in pipeline {}",
-                                 dumpPipelineName(pipeline_name));
-                }
-            } else {
-                spdlog::warn("failed to create texture for pipeline {}",
-                             dumpPipelineName(pipeline_name));
-            }
-            delete[] buff;
-        } else {
-            spdlog::error("failed to create text buffer");
-        }
-    } else {
-        spdlog::warn("pipeline {} not found", dumpPipelineName(pipeline_name));
-    }
-}
+// void RendererManager::addText(const PipelineType &pipeline_name,
+//                               std::string_view ttf_path, std::string_view
+//                               str, const glm::ivec2 &text_size, uint32_t
+//                               line_max, uint32_t column_offset, uint32_t
+//                               row_offset, uint32_t column_interval, uint32_t
+//                               row_interval, uint32_t binding) {
+//     if (auto it = m_container.find(pipeline_name); it != m_container.end()) {
+//         uint8_t *buff =
+//             m_font->loadStr(ttf_path, str, text_size, line_max,
+//             column_offset,
+//                             row_offset, column_interval, row_interval);
+//         if (buff) {
+//             auto texture = m_device.createText(buff, text_size);
+//             if (texture) {
+//                 if (it->second->descriptor) {
+//                     it->second->descriptor->updateTexture(*texture, binding,
+//                     0); it->second->texture = std::move(texture);
+//                 } else {
+//                     spdlog::warn("no descriptor in pipeline {}",
+//                                  dumpPipelineName(pipeline_name));
+//                 }
+//             } else {
+//                 spdlog::warn("failed to create texture for pipeline {}",
+//                              dumpPipelineName(pipeline_name));
+//             }
+//             delete[] buff;
+//         } else {
+//             spdlog::error("failed to create text buffer");
+//         }
+//     } else {
+//         spdlog::warn("pipeline {} not found",
+//         dumpPipelineName(pipeline_name));
+//     }
+// }
 
 void RendererManager::setViewport(float w, float h, float x, float y, float min,
                                   float max) {
@@ -528,163 +536,168 @@ void RendererManager::pushConstant(VkPipelineLayout &layout,
     vkCmdPushConstants(m_device.cmd(), layout, stage, offset, size, data);
 }
 
-void RendererManager::drawBase() {
-    if (auto it = m_container.find(PipelineType::Base);
-        it != m_container.end()) {
-        auto &pipeline = it->second->pipeline;
-        if (**pipeline != VK_NULL_HANDLE) {
-            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              **pipeline);
-        }
-        setViewport();
-        setScissor();
-        auto &vertex_buffer = it->second->vbuffers;
-        auto &index_buffer = it->second->ibuffers;
-        if (vertex_buffer) {
-            bindVertex(*vertex_buffer);
-            if (index_buffer) {
-                bindIndex(*index_buffer);
-                drawIndex(index_buffer->size);
-            } else {
-                draw(vertex_buffer->size);
-            }
-        }
-    } else {
-        spdlog::warn("base pipeline not found");
-    }
-}
+// void RendererManager::drawBase() {
+//     if (auto it = m_container.find(PipelineType::Base);
+//         it != m_container.end()) {
+//         auto &pipeline = it->second->pipeline;
+//         if (**pipeline != VK_NULL_HANDLE) {
+//             vkCmdBindPipeline(m_device.cmd(),
+//             VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                               **pipeline);
+//         }
+//         setViewport();
+//         setScissor();
+//         auto &vertex_buffer = it->second->vbuffers;
+//         auto &index_buffer = it->second->ibuffers;
+//         if (vertex_buffer) {
+//             bindVertex(*vertex_buffer);
+//             if (index_buffer) {
+//                 bindIndex(*index_buffer);
+//                 drawIndex(index_buffer->size);
+//             } else {
+//                 draw(vertex_buffer->size);
+//             }
+//         }
+//     } else {
+//         spdlog::warn("base pipeline not found");
+//     }
+// }
 
-void RendererManager::drawBaseTexture() {
-    if (auto it = m_container.find(PipelineType::BaseTexture);
-        it != m_container.end()) {
-        auto &pipeline = it->second->pipeline;
-        if (**pipeline != VK_NULL_HANDLE) {
-            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              **pipeline);
-        }
-        setViewport();
-        setScissor();
-        if (it->second->descriptor) {
-            bindDescriptorSet(it->second->descriptor->set(),
-                              **it->second->layout);
-        }
-        auto &vertex_buffer = it->second->vbuffers;
-        auto &index_buffer = it->second->ibuffers;
-        if (vertex_buffer) {
-            bindVertex(*vertex_buffer);
-            if (index_buffer) {
-                bindIndex(*index_buffer);
-                drawIndex(index_buffer->size);
-            } else {
-                draw(vertex_buffer->size);
-            }
-        }
-    } else {
-        spdlog::warn("base texture pipeline not found");
-    }
-}
+// void RendererManager::drawBaseTexture() {
+//     if (auto it = m_container.find(PipelineType::BaseTexture);
+//         it != m_container.end()) {
+//         auto &pipeline = it->second->pipeline;
+//         if (**pipeline != VK_NULL_HANDLE) {
+//             vkCmdBindPipeline(m_device.cmd(),
+//             VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                               **pipeline);
+//         }
+//         setViewport();
+//         setScissor();
+//         if (it->second->descriptor) {
+//             bindDescriptorSet(it->second->descriptor->set(),
+//                               **it->second->layout);
+//         }
+//         auto &vertex_buffer = it->second->vbuffers;
+//         auto &index_buffer = it->second->ibuffers;
+//         if (vertex_buffer) {
+//             bindVertex(*vertex_buffer);
+//             if (index_buffer) {
+//                 bindIndex(*index_buffer);
+//                 drawIndex(index_buffer->size);
+//             } else {
+//                 draw(vertex_buffer->size);
+//             }
+//         }
+//     } else {
+//         spdlog::warn("base texture pipeline not found");
+//     }
+// }
 
-void RendererManager::drawBaseTextureArray() {
-    if (auto it = m_container.find(PipelineType::BaseTextureArray);
-        it != m_container.end()) {
-        auto &pipeline = it->second->pipeline;
-        if (**pipeline != VK_NULL_HANDLE) {
-            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              **pipeline);
-        }
-        setViewport();
-        setScissor();
+// void RendererManager::drawBaseTextureArray() {
+//     if (auto it = m_container.find(PipelineType::BaseTextureArray);
+//         it != m_container.end()) {
+//         auto &pipeline = it->second->pipeline;
+//         if (**pipeline != VK_NULL_HANDLE) {
+//             vkCmdBindPipeline(m_device.cmd(),
+//             VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                               **pipeline);
+//         }
+//         setViewport();
+//         setScissor();
 
-        auto &vertex_buffer = it->second->vbuffers;
-        auto &index_buffer = it->second->ibuffers;
-        if (vertex_buffer) {
-            bindVertex(*vertex_buffer);
-            if (index_buffer) {
-                bindIndex(*index_buffer);
-                if (it->second->descriptor) {
-                    for (int i = 0; i < 3; ++i) {
-                        bindDescriptorSet(
-                            it->second->descriptor->set(), **it->second->layout,
-                            {static_cast<uint32_t>(
-                                it->second->duniforms->ranges * i)});
+//         auto &vertex_buffer = it->second->vbuffers;
+//         auto &index_buffer = it->second->ibuffers;
+//         if (vertex_buffer) {
+//             bindVertex(*vertex_buffer);
+//             if (index_buffer) {
+//                 bindIndex(*index_buffer);
+//                 if (it->second->descriptor) {
+//                     for (int i = 0; i < 3; ++i) {
+//                         bindDescriptorSet(
+//                             it->second->descriptor->set(),
+//                             **it->second->layout, {static_cast<uint32_t>(
+//                                 it->second->duniforms->ranges * i)});
 
-                        drawIndex(index_buffer->size);
-                    }
-                }
-            } else {
-                if (it->second->descriptor) {
-                    for (int i = 0; i < 3; ++i) {
-                        bindDescriptorSet(
-                            it->second->descriptor->set(), **it->second->layout,
-                            {static_cast<uint32_t>(
-                                it->second->duniforms->ranges * i)});
-                    }
-                    draw(vertex_buffer->size);
-                }
-            }
-        }
-    } else {
-        spdlog::warn("base texture pipeline not found");
-    }
-}
+//                         drawIndex(index_buffer->size);
+//                     }
+//                 }
+//             } else {
+//                 if (it->second->descriptor) {
+//                     for (int i = 0; i < 3; ++i) {
+//                         bindDescriptorSet(
+//                             it->second->descriptor->set(),
+//                             **it->second->layout, {static_cast<uint32_t>(
+//                                 it->second->duniforms->ranges * i)});
+//                     }
+//                     draw(vertex_buffer->size);
+//                 }
+//             }
+//         }
+//     } else {
+//         spdlog::warn("base texture pipeline not found");
+//     }
+// }
 
-void RendererManager::drawFont() {
-    if (auto it = m_container.find(PipelineType::Font);
-        it != m_container.end()) {
-        auto &pipeline = it->second->pipeline;
-        if (**pipeline != VK_NULL_HANDLE) {
-            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              **pipeline);
-        }
-        setViewport();
-        setScissor();
-        if (it->second->descriptor) {
-            bindDescriptorSet(it->second->descriptor->set(),
-                              **it->second->layout);
-        }
-        auto &vertex_buffer = it->second->vbuffers;
-        auto &index_buffer = it->second->ibuffers;
-        if (vertex_buffer) {
-            bindVertex(*vertex_buffer);
-            if (index_buffer) {
-                bindIndex(*index_buffer);
-                drawIndex(index_buffer->size);
-            } else {
-                draw(vertex_buffer->size);
-            }
-        }
-    } else {
-        spdlog::warn("base texture pipeline not found");
-    }
-}
+// void RendererManager::drawFont() {
+//     if (auto it = m_container.find(PipelineType::Font);
+//         it != m_container.end()) {
+//         auto &pipeline = it->second->pipeline;
+//         if (**pipeline != VK_NULL_HANDLE) {
+//             vkCmdBindPipeline(m_device.cmd(),
+//             VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                               **pipeline);
+//         }
+//         setViewport();
+//         setScissor();
+//         if (it->second->descriptor) {
+//             bindDescriptorSet(it->second->descriptor->set(),
+//                               **it->second->layout);
+//         }
+//         auto &vertex_buffer = it->second->vbuffers;
+//         auto &index_buffer = it->second->ibuffers;
+//         if (vertex_buffer) {
+//             bindVertex(*vertex_buffer);
+//             if (index_buffer) {
+//                 bindIndex(*index_buffer);
+//                 drawIndex(index_buffer->size);
+//             } else {
+//                 draw(vertex_buffer->size);
+//             }
+//         }
+//     } else {
+//         spdlog::warn("base texture pipeline not found");
+//     }
+// }
 
-void RendererManager::drawMouse() {
-    if (auto it = m_container.find(PipelineType::Mouse);
-        it != m_container.end()) {
-        auto &pipeline = it->second->pipeline;
-        if (**pipeline != VK_NULL_HANDLE) {
-            vkCmdBindPipeline(m_device.cmd(), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              **pipeline);
-        }
-        setViewport();
-        setScissor();
-        if (it->second->descriptor) {
-            bindDescriptorSet(it->second->descriptor->set(),
-                              **it->second->layout);
-        }
-        auto &vertex_buffer = it->second->vbuffers;
-        auto &index_buffer = it->second->ibuffers;
-        if (vertex_buffer) {
-            bindVertex(*vertex_buffer);
-            if (index_buffer) {
-                bindIndex(*index_buffer);
-                drawIndex(index_buffer->size);
-            } else {
-                draw(vertex_buffer->size);
-            }
-        }
-    } else {
-        spdlog::warn("base texture pipeline not found");
-    }
-}
+// void RendererManager::drawMouse() {
+//     if (auto it = m_container.find(PipelineType::Mouse);
+//         it != m_container.end()) {
+//         auto &pipeline = it->second->pipeline;
+//         if (**pipeline != VK_NULL_HANDLE) {
+//             vkCmdBindPipeline(m_device.cmd(),
+//             VK_PIPELINE_BIND_POINT_GRAPHICS,
+//                               **pipeline);
+//         }
+//         setViewport();
+//         setScissor();
+//         if (it->second->descriptor) {
+//             bindDescriptorSet(it->second->descriptor->set(),
+//                               **it->second->layout);
+//         }
+//         auto &vertex_buffer = it->second->vbuffers;
+//         auto &index_buffer = it->second->ibuffers;
+//         if (vertex_buffer) {
+//             bindVertex(*vertex_buffer);
+//             if (index_buffer) {
+//                 bindIndex(*index_buffer);
+//                 drawIndex(index_buffer->size);
+//             } else {
+//                 draw(vertex_buffer->size);
+//             }
+//         }
+//     } else {
+//         spdlog::warn("base texture pipeline not found");
+//     }
+// }
 } // namespace cg::engine::backend
